@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Óticas Ammo - Caixa e Busca de Pedidos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body, html { width: 100vw; height: 100vh; overflow: hidden; background-color: #000; display: flex; justify-content: center; align-items: center; }
+
+        .tablet-frame { width: 96vw; height: 94vh; background-color: #FFF; border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* CABEÇALHO DO CLIENTE */
+        .client-header { width: 100%; height: 40px; background-color: #00A8E1; display: flex; align-items: center; padding: 0 15px; color: #0A2342; font-size: 11px; gap: 15px; }
+        .header-tag { font-weight: bold; margin-right: 5px; }
+        .header-data { color: #FFF; font-weight: normal; margin-right: 15px; }
+        .btn-busca-ativa { margin-left: auto; background: #FFF; color: #444; height: 100%; display: flex; align-items: center; padding: 0 20px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+
+        /* CABEÇALHO DA O.S. E ABAS */
+        .os-header { width: 100%; height: 35px; background-color: #444; display: flex; align-items: center; padding: 0 15px; color: #CCC; font-size: 10px; gap: 10px; text-transform: uppercase; }
+        .os-number { font-weight: bold; color: #FFF; }
+        .tabs-container { display: flex; gap: 5px; margin-left: auto; }
+        .tab-btn { background: rgba(255, 255, 255, 0.1); color: #CCC; padding: 0 15px; height: 25px; border-radius: 4px; display: flex; align-items: center; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background-color: #007aff; color: #FFF; }
+        .tab-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+        /* ÁREA DE BUSCA */
+        .search-area { width: 100%; padding: 15px; display: flex; align-items: center; gap: 20px; font-size: 12px; color: #333; }
+        .search-label { font-weight: bold; }
+        .radio-filters { display: flex; gap: 15px; }
+        .radio-option { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .search-input-group { flex: 1; position: relative; display: flex; align-items: center; }
+        .search-input { width: 100%; height: 30px; border: 1px solid #CCC; padding: 0 10px; border-radius: 4px; font-size: 11px; color: #333; }
+        .btn-buscar { background-color: #000; color: #FFF; height: 30px; padding: 0 25px; border-radius: 4px; font-size: 11px; font-weight: bold; border: none; cursor: pointer; margin-left: 10px; }
+        
+        /* MENU LATERAL E GRADE */
+        .main-content { flex: 1; display: flex; overflow: hidden; padding-bottom: 15px; }
+        .side-menu { width: 140px; padding: 0 15px; display: flex; flex-direction: column; gap: 5px; }
+        .side-btn { background: #F5F5F5; border: 1px solid #CCC; color: #444; height: 35px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .side-btn.active, .side-btn:hover { border-color: #007aff; color: #007aff; background: #FFF; }
+
+        .results-container { flex: 1; background-color: #EEE; border: 1px solid #CCC; border-radius: 6px; margin-right: 15px; display: flex; flex-direction: column; overflow: hidden; position: relative; padding-bottom: 40px; }
+        
+        /* VIEW DA LISTA DE PEDIDOS (TABELA) */
+        .view-lista { flex: 1; overflow-y: auto; display: block; }
+        #results-table { width: 100%; border-collapse: collapse; font-size: 10px; color: #444; }
+        #results-table thead tr { background-color: #E0E0E0; border-bottom: 1px solid #CCC; height: 28px; position: sticky; top: 0; }
+        #results-table th { text-align: left; padding: 0 10px; font-weight: 600; }
+        #results-table tbody tr { height: 28px; border-bottom: 1px solid #CCC; cursor: pointer; }
+        #results-table tbody tr.selected { background-color: #d1e7dd; border-left: 4px solid #0f5132; }
+        #results-table tbody tr:hover { background-color: rgba(0, 122, 255, 0.1); }
+        #results-table td { padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        
+        /* VIEW DA RECEITA (OCULTA POR PADRÃO) */
+        .view-receita { flex: 1; overflow-y: auto; display: none; padding: 20px; background: #FFF; }
+        .receita-card { border: 1px solid #CCC; border-radius: 8px; overflow: hidden; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .receita-header { background: #0A2342; color: #FFF; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .receita-grid { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; }
+        .receita-grid th { background: #F5F5F5; border-bottom: 1px solid #DDD; border-right: 1px solid #DDD; padding: 10px; color: #444; }
+        .receita-grid td { border-bottom: 1px solid #EEE; border-right: 1px solid #EEE; padding: 12px; font-weight: bold; color: #000; }
+        .receita-grid .olho-lbl { background: #E0E0E0; font-weight: 900; color: #0A2342; }
+        .receita-footer { padding: 15px; background: #F9F9F9; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-top: 1px solid #CCC; }
+        .adicao-box { background: #007aff; color: #FFF; padding: 5px 15px; border-radius: 4px; font-weight: bold; }
+
+        .no-results { flex: 1; display: flex; justify-content: center; align-items: center; color: #666; font-size: 12px; font-weight: 600; }
+
+        /* RODAPÉ DE AÇÕES */
+        .action-footer { height: 40px; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background-color: rgba(255,255,255,0.8); border-top: 1px solid #CCC; position: absolute; bottom: 0; left: 0; }
+        .btn-action { background-color: #000; color: #FFF; height: 25px; padding: 0 15px; border-radius: 4px; font-size: 9px; font-weight: bold; border: none; cursor: pointer; margin-left: 10px; }
+        .btn-voltar { background-color: #007aff; display: flex; align-items: center; gap: 6px; margin-left: 0; }
+        .btn-editar { background-color: #198754; }
+        .btn-excluir { background-color: #dc3545; }
+
+        /* OVERLAYS E MODAIS */
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); color: #FFF; z-index: 999; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: #FFF; width: 600px; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 16px; font-weight: bold; color: #0A2342; border-bottom: 1px solid #EEE; padding-bottom: 10px; display: flex; justify-content: space-between; }
+        .modal-close { cursor: pointer; color: #dc3545; }
+        .modal-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .form-group input { padding: 6px; border: 1px solid #CCC; border-radius: 4px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; border-top: 1px solid #EEE; padding-top: 10px; }
+        .btn-salvar { background: #0d6efd; color: white; padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        /* ==========================================
+           LAYOUT DE IMPRESSÃO IDÊNTICO AO PDV
+           ========================================== */
+        @media print {
+            body * { visibility: hidden; }
+            #areaImpressao, #areaImpressao * { visibility: visible; }
+            #areaImpressao {
+                position: absolute; left: 0; top: 0; width: 100%;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; color: #000;
+                background: white;
+            }
+            .via-impressao { border: 1px solid #000; border-radius: 5px; padding: 8px; margin-bottom: 8px; page-break-inside: avoid; }
+            .print-title { text-align: center; font-weight: 900; font-size: 13px; margin-bottom: 4px; letter-spacing: 1px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+            .print-subtitle { text-align: center; font-size: 11px; font-weight: bold; margin-top: -2px; margin-bottom: 6px; color: #444; }
+            .print-section { margin-bottom: 6px; line-height: 1.2; }
+            .print-section b { color: #222; }
+            .print-row { display: flex; justify-content: space-between; margin-bottom: 3px; border-bottom: 1px dotted #ccc; padding-bottom: 2px; }
+            .print-row:last-child { border-bottom: none; }
+            .print-table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 4px; }
+            .print-table th, .print-table td { border: 1px solid #000; padding: 2px; text-align: center; font-size: 9px; }
+            .print-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+            .termo-entrega { margin-top: 8px; border: 1px solid #000; padding: 6px; border-radius: 5px; background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }
+            .termo-titulo { text-align: center; font-weight: 900; font-size: 10px; margin-bottom: 3px; }
+            .termo-desc { text-align: center; font-size: 9px; margin-bottom: 6px; font-style: italic; }
+            .check-item { display: flex; align-items: center; margin-bottom: 4px; font-weight: bold; font-size: 9px; }
+            .check-box { margin-right: 10px; font-weight: normal; }
+            .assinatura-box { margin-top: 20px; display: flex; justify-content: space-around; }
+            .assinatura-linha { border-top: 1px solid #000; width: 40%; text-align: center; padding-top: 3px; font-weight: bold; font-size: 9px; }
+            .destaque-valor { font-size: 12px; font-weight: 900; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tablet-frame">
+
+        <header class="client-header">
+            <div><span class="header-tag">Cliente:</span><span id="header-nome" class="header-data"></span></div>
+            <div><span class="header-tag">Telefone:</span><span id="header-telefone" class="header-data"></span></div>
+            <div class="btn-busca-ativa">BUSCA</div>
+        </header>
+
+        <div class="os-header">
+            <div><span class="header-tag" style="color: #CCC;">ORDEM DE SERVIÇO</span> <span id="os-number" class="os-number">000000-00</span></div>
+            <div class="tabs-container">
+                <div class="tab-btn active" id="tab-cliente" onclick="alternarVisao('lista')">CLIENTE</div>
+                <div class="tab-btn disabled" id="tab-receita" onclick="buscarEMostrarReceita()">RECEITA</div>
+                <div class="tab-btn disabled" id="tab-laboratorio">LABORATÓRIO</div>
+                <div class="tab-btn disabled" id="tab-fechamento">FECHAMENTO</div>
+            </div>
+        </div>
+
+        <div class="search-area">
+            <span class="search-label">Busca:</span>
+            <div class="radio-filters">
+                <label class="radio-option"><input type="radio" name="search-type" value="os" checked> Número OS</label>
+                <label class="radio-option"><input type="radio" name="search-type" value="data"> Data Emissão</label>
+                <label class="radio-option"><input type="radio" name="search-type" value="nome"> Nome Cliente</label>
+            </div>
+            <div class="search-input-group">
+                <input type="text" class="search-input" id="search-input" placeholder="Insira o dado para busca...">
+                <button class="btn-buscar" onclick="executarBusca('buscar_os')">Buscar</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <aside class="side-menu">
+                <div class="side-btn active" id="btn-menu-os" onclick="alterarMenuLateral('os')">OS</div>
+                <div class="side-btn" id="btn-menu-excluidas" onclick="alterarMenuLateral('excluidas')">OS EXCLUÍDAS</div>
+                <div class="side-btn" id="btn-menu-clientes" onclick="alterarMenuLateral('clientes')">CLIENTES</div>
+            </aside>
+
+            <section class="results-container">
+                
+                <div class="view-lista" id="view-lista">
+                    <table id="results-table" style="display: none;">
+                        <thead id="table-head"></thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                    <div class="no-results" id="no-results-msg">Selecione uma opção ao lado ou faça uma busca.</div>
+                </div>
+
+                <div class="view-receita" id="view-receita">
+                    <div class="receita-card">
+                        <div class="receita-header">
+                            <span><i class="fas fa-prescription"></i> Prescrição Médica</span>
+                            <span id="rec-medico"><i class="fas fa-user-md"></i> Médico Não Informado</span>
+                        </div>
+                        <table class="receita-grid">
+                            <thead>
+                                <tr>
+                                    <th class="olho-lbl">OLHO</th>
+                                    <th>ESFÉRICO</th>
+                                    <th>CILÍNDRICO</th>
+                                    <th>EIXO</th>
+                                    <th>DNP</th>
+                                    <th>ALTURA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="olho-lbl">OD</td>
+                                    <td id="rec-esf-od">--</td>
+                                    <td id="rec-cil-od">--</td>
+                                    <td id="rec-eixo-od">--</td>
+                                    <td id="rec-dnp-od">--</td>
+                                    <td id="rec-alt-od">--</td>
+                                </tr>
+                                <tr>
+                                    <td class="olho-lbl">OE</td>
+                                    <td id="rec-esf-oe">--</td>
+                                    <td id="rec-cil-oe">--</td>
+                                    <td id="rec-eixo-oe">--</td>
+                                    <td id="rec-dnp-oe">--</td>
+                                    <td id="rec-alt-oe">--</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="receita-footer">
+                            <div><strong>Observações:</strong> <span id="rec-obs">Nenhuma observação.</span></div>
+                            <div class="adicao-box">ADIÇÃO: <span id="rec-adicao">+0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-footer">
+                    <div class="action-left">
+                        <button class="btn-action btn-voltar" onclick="window.location.href='./menu1.html'">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                    </div>
+                    <div class="action-right">
+                        <button class="btn-action" style="background-color: #0dcaf0; color: #000;" onclick="reimprimirOSCompleta()">
+                            <i class="fas fa-print"></i> Reimprimir OS
+                        </button>
+                        <button class="btn-action btn-excluir" onclick="abrirModalSenhaExclusao()"><i class="fas fa-trash"></i> Excluir Pedido</button>
+                        <button class="btn-action btn-editar" onclick="abrirModalEdicao()">Editar Pedido</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <!-- Modais e Sobreposições -->
+    <div class="modal-overlay" id="modal-edicao">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span><i class="fas fa-edit"></i> Editando Pedido: <span id="modal-os-num"></span></span>
+                <i class="fas fa-times modal-close" onclick="fecharModalEdicao()"></i>
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">Altere os dados da Receita e Fechamento abaixo:</div>
+            <div class="modal-form-grid">
+                <div class="form-group"><label>Cliente Nome:</label><input type="text" id="edit-nome" disabled></div>
+                <div class="form-group"><label>Valor Total (R$):</label><input type="text" id="edit-total"></div>
+                <div class="form-group" style="grid-column: span 2;"><label>Produtos / Receita:</label><input type="text" id="edit-produto"></div>
+                <div class="form-group"><label>Pagamento:</label><input type="text" id="edit-pagto"></div>
+                <div class="form-group"><label>Status / Resumo:</label><input type="text" id="edit-status"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" style="background: #CCC; color:#333;" onclick="fecharModalEdicao()">Cancelar</button>
+                <button class="btn-salvar" onclick="salvarEdicaoEGerarPDF()"><i class="fas fa-save"></i> Salvar e Gerar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-senha-exclusao">
+        <div class="modal-box" style="width: 350px;">
+            <div class="modal-header">
+                <span><i class="fas fa-lock"></i> Autenticação Necessária</span>
+                <i class="fas fa-times modal-close" onclick="fecharModalSenha()"></i>
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Digite a senha de Administrador ou Master para excluir a O.S. <strong id="exclusao-os-num" style="color: #000;"></strong>:
+            </div>
+            <div class="form-group">
+                <input type="password" id="input-senha-exclusao" placeholder="Digite a senha..." autocomplete="off" style="font-size: 14px; padding: 8px;">
+            </div>
+            <div class="modal-footer" style="justify-content: flex-end;">
+                <button class="btn-action" style="background: #CCC; color:#333;" onclick="fecharModalSenha()">Cancelar</button>
+                <button class="btn-action btn-excluir" onclick="validarSenhaEExcluir()"><i class="fas fa-check"></i> Confirmar Exclusão</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="areaImpressao" style="display: none;"></div>
+
+    <div id="loading-overlay">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <div style="margin-top: 10px;" id="loading-text">Processando...</div>
+    </div>
+
+    <script>
+        const URL_BASE_1_GERAL = ''; 
+        const URL_BASE_2_PRINCIPAL = ""; 
+
+        const SENHA_ADMIN = 'admin123';
+        const SENHA_MASTER = 'master123';
+
+        let dadosCarregados = [];
+        let linhaSelecionada = null; 
+        let modoAtual = 'os'; 
+
+        const tableBody = document.getElementById('table-body');
+        const tableHead = document.getElementById('table-head');
+        const osNumber = document.getElementById('os-number');
+        const overlay = document.getElementById('loading-overlay');
+        const modalEdicao = document.getElementById('modal-edicao');
+        const modalSenha = document.getElementById('modal-senha-exclusao');
+
+        const colMap = { os: 0, data: 1, vendedor: 2, nome: 3, produtos: 4, total: 8, tipo_pagto: 9, status_pagto: 10 };
+        const recMap = { nome:0, esfOD:1, cilOD:2, eixoOD:3, dnpOD:4, altOD:5, esfOE:6, cilOE:7, eixoOE:8, dnpOE:9, altOE:10, adicao:11, medico:12, obs:13 };
+        const cliMap = { nome: 2, cpf: 4, telefone: 13, nascimento: 3 };
+
+        function alternarVisao(visao) {
+            if (visao === 'lista') {
+                document.getElementById('view-lista').style.display = 'block';
+                document.getElementById('view-receita').style.display = 'none';
+                document.getElementById('tab-cliente').classList.add('active');
+                document.getElementById('tab-receita').classList.remove('active');
+            } else if (visao === 'receita') {
+                document.getElementById('view-lista').style.display = 'none';
+                document.getElementById('view-receita').style.display = 'block';
+                document.getElementById('tab-cliente').classList.remove('active');
+                document.getElementById('tab-receita').classList.add('active');
+            }
+        }
+
+        function alterarMenuLateral(modo) {
+            document.querySelectorAll('.side-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-menu-${modo}`).classList.add('active');
+            modoAtual = modo;
+            document.getElementById('search-input').value = ''; 
+            alternarVisao('lista'); 
+            
+            if (modo === 'os') executarBusca('buscar_os');
+            if (modo === 'excluidas') executarBusca('listar_excluidas');
+            if (modo === 'clientes') executarBusca('listar_clientes');
+        }
+
+        async function executarBusca(acao) {
+            const termo = document.getElementById('search-input').value.trim();
+            const tipoBusca = document.querySelector('input[name="search-type"]:checked').value;
+
+            overlay.style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Buscando dados...";
+            tableBody.innerHTML = '';
+            document.getElementById('no-results-msg').style.display = 'none';
+            linhaSelecionada = null;
+            resetarAbasSuperiores();
+            alternarVisao('lista');
+
+            try {
+                const url = `${URL_BASE_2_PRINCIPAL}?apiCaixa=true&acao=${acao}&termo=${encodeURIComponent(termo)}&tipo=${tipoBusca}`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.erro) { alert(result.erro); return; }
+
+                dadosCarregados = result.dados || [];
+
+                if (dadosCarregados.length > 0) {
+                    montarCabecalhoTabela();
+                    dadosCarregados.forEach((row, index) => renderTableRow(row, index));
+                    document.getElementById('results-table').style.display = 'table';
+                } else {
+                    document.getElementById('results-table').style.display = 'none';
+                    document.getElementById('no-results-msg').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro na conexão com o banco de dados.");
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function montarCabecalhoTabela() {
+            if (modoAtual === 'clientes') {
+                tableHead.innerHTML = `<tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Nascimento</th></tr>`;
+            } else {
+                tableHead.innerHTML = `<tr>
+                    <th style="width: 80px;">O.S.</th>
+                    <th style="width: 80px;">Data</th>
+                    <th style="width: 120px;">Vendedor</th>
+                    <th style="width: 150px;">Cliente</th>
+                    <th>Produtos / Lentes</th>
+                    <th style="width: 70px;">Pagto</th>
+                    <th style="width: 150px;">Status</th>
+                    <th style="width: 70px;">Total</th>
+                </tr>`;
+            }
+        }
+
+        function renderTableRow(row, index) {
+            const tr = document.createElement('tr');
+            
+            if (modoAtual === 'clientes') {
+                tr.innerHTML = `
+                    <td>${row[cliMap.nome] || ''}</td>
+                    <td>${row[cliMap.cpf] || ''}</td>
+                    <td>${row[cliMap.telefone] || ''}</td>
+                    <td>${formatarData(row[cliMap.nascimento])}</td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td>${row[colMap.os]||''}</td>
+                    <td>${formatarData(row[colMap.data])}</td>
+                    <td title="${row[colMap.vendedor]||''}">${row[colMap.vendedor]||''}</td>
+                    <td title="${row[colMap.nome]||''}">${row[colMap.nome]||''}</td>
+                    <td title="${row[colMap.produtos]||''}">${row[colMap.produtos]||''}</td>
+                    <td>${row[colMap.tipo_pagto]||''}</td>
+                    <td title="${row[colMap.status_pagto]||''}">${row[colMap.status_pagto]||''}</td>
+                    <td>${formatarMoeda(row[colMap.total])}</td>
+                `;
+            }
+
+            tr.onclick = () => {
+                document.querySelectorAll('#table-body tr').forEach(r => r.classList.remove('selected'));
+                tr.classList.add('selected');
+                linhaSelecionada = row;
+
+                if (modoAtual === 'os' || modoAtual === 'excluidas') {
+                    preencherCabecalhoCliente(row);
+                    destacarAbasEdicao();
+                }
+            };
+            tableBody.appendChild(tr);
+        }
+
+        function preencherCabecalhoCliente(row) {
+            document.getElementById('header-nome').innerText = row[colMap.nome] || '';
+            osNumber.innerText = row[colMap.os] || '000000-00';
+        }
+
+        function destacarAbasEdicao() {
+            document.getElementById('tab-cliente').className = 'tab-btn active'; 
+            document.getElementById('tab-laboratorio').className = 'tab-btn disabled';
+            document.getElementById('tab-receita').className = 'tab-btn'; 
+            document.getElementById('tab-fechamento').className = 'tab-btn';
+        }
+
+        function resetarAbasSuperiores() {
+            document.getElementById('tab-cliente').className = 'tab-btn active';
+            document.getElementById('tab-receita').className = 'tab-btn disabled';
+            document.getElementById('tab-laboratorio').className = 'tab-btn disabled';
+            document.getElementById('tab-fechamento').className = 'tab-btn disabled';
+            osNumber.innerText = '000000-00';
+            document.getElementById('header-nome').innerText = '';
+        }
+
+        async function buscarEMostrarReceita() {
+            if (document.getElementById('tab-receita').classList.contains('disabled')) return;
+            if (!linhaSelecionada) return;
+
+            const nomeParaBuscar = linhaSelecionada[colMap.nome];
+
+            overlay.style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Buscando Receita...";
+
+            try {
+                const url = `${URL_BASE_2_PRINCIPAL}?apiCaixa=true&acao=buscar_receita&nome=${encodeURIComponent(nomeParaBuscar)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.erro) {
+                    alert(result.erro);
+                    return;
+                }
+
+                const rec = result.dados;
+                
+                document.getElementById('rec-medico').innerHTML = `<i class="fas fa-user-md"></i> Médico: ${rec[recMap.medico] || 'Não Informado'}`;
+                
+                document.getElementById('rec-esf-od').innerText = rec[recMap.esfOD] || 'ESF';
+                document.getElementById('rec-cil-od').innerText = rec[recMap.cilOD] || 'CIL';
+                document.getElementById('rec-eixo-od').innerText = rec[recMap.eixoOD] || 'EIX';
+                document.getElementById('rec-dnp-od').innerText = rec[recMap.dnpOD] || '--';
+                document.getElementById('rec-alt-od').innerText = rec[recMap.altOD] || '--';
+
+                document.getElementById('rec-esf-oe').innerText = rec[recMap.esfOE] || 'ESF';
+                document.getElementById('rec-cil-oe').innerText = rec[recMap.cilOE] || 'CIL';
+                document.getElementById('rec-eixo-oe').innerText = rec[recMap.eixoOE] || 'EIX';
+                document.getElementById('rec-dnp-oe').innerText = rec[recMap.dnpOE] || '--';
+                document.getElementById('rec-alt-oe').innerText = rec[recMap.altOE] || '--';
+
+                document.getElementById('rec-adicao').innerText = rec[recMap.adicao] || '+0.00';
+                document.getElementById('rec-obs').innerText = rec[recMap.obs] || 'Nenhuma observação.';
+
+                alternarVisao('receita');
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao puxar a receita do banco de dados.");
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        async function reimprimirOSCompleta() {
+            if (!linhaSelecionada || modoAtual === 'clientes') {
+                alert("Selecione um pedido na lista para imprimir.");
+                return;
+            }
+
+            overlay.style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Buscando dados completos da O.S...";
+
+            try {
+                const osNumero = linhaSelecionada[colMap.os];
+                const nomeCliente = linhaSelecionada[colMap.nome];
+                const vendedor = linhaSelecionada[colMap.vendedor];
+                const dataVenda = formatarData(linhaSelecionada[colMap.data]);
+                const produtos = linhaSelecionada[colMap.produtos];
+                const totalVenda = formatarMoeda(linhaSelecionada[colMap.total]);
+                const statusPagto = linhaSelecionada[colMap.status_pagto];
+                const formaPagto = linhaSelecionada[colMap.tipo_pagto];
+
+                const urlRec = `${URL_BASE_2_PRINCIPAL}?apiCaixa=true&acao=buscar_receita&nome=${encodeURIComponent(nomeCliente)}`;
+                const response = await fetch(urlRec);
+                const result = await response.json();
+                
+                let rec = Array(14).fill('--');
+                if (!result.erro && result.dados) { rec = result.dados; }
+
+                const divImpressao = document.getElementById('areaImpressao');
+                const tabletFrame = document.querySelector('.tablet-frame');
+                if (tabletFrame) tabletFrame.style.display = 'none';
+                
+                divImpressao.innerHTML = `
+                    <div class="via-impressao">
+                        <div class="print-title">ÓTICAS AMMO</div>
+                        <div class="print-subtitle">ORDEM DE SERVIÇO - VIA LABORATÓRIO (REIMPRESSÃO)</div>
+                        <div class="print-section" style="background:#f0f0f0; padding:6px; border-radius:3px;">
+                            <b>OS:</b> ${osNumero} | <b>Data Origem:</b> ${dataVenda}<br>
+                            <b>Colaborador(a):</b> ${vendedor}<br>
+                        </div>
+                        <div class="print-section">
+                            <b>PRODUTOS (Armação / Lentes):</b><br>
+                            ${produtos}
+                        </div>
+                        <div class="print-section">
+                            <table class="print-table">
+                                <tr style="background:#ddd"><th colspan="6">VISÃO PARA LONGE</th></tr>
+                                <tr><th>Olho</th><th>Esf</th><th>Cil</th><th>Eixo</th><th>DNP</th><th>Alt</th></tr>
+                                <tr><td><b>OD</b></td><td>${rec[recMap.esfOD] || '--'}</td><td>${rec[recMap.cilOD] || '--'}</td><td>${rec[recMap.eixoOD] || '--'}</td><td>${rec[recMap.dnpOD] || '--'}</td><td>${rec[recMap.altOD] || '--'}</td></tr>
+                                <tr><td><b>OE</b></td><td>${rec[recMap.esfOE] || '--'}</td><td>${rec[recMap.cilOE] || '--'}</td><td>${rec[recMap.eixoOE] || '--'}</td><td>${rec[recMap.dnpOE] || '--'}</td><td>${rec[recMap.altOE] || '--'}</td></tr>
+                                <tr style="background:#ddd"><th colspan="6">VISÃO PARA PERTO</th></tr>
+                                <tr><th>Olho</th><th>Esf</th><th>Cil</th><th>Eixo</th><th colspan="2">Adição</th></tr>
+                                <tr><td><b>OD</b></td><td>${rec[recMap.esfOD] || '--'}</td><td>${rec[recMap.cilOD] || '--'}</td><td>${rec[recMap.eixoOD] || '--'}</td><td colspan="2" rowspan="2" style="vertical-align:middle; font-weight:bold; font-size:12px;">${rec[recMap.adicao] || '--'}</td></tr>
+                                <tr><td><b>OE</b></td><td>${rec[recMap.esfOE] || '--'}</td><td>${rec[recMap.cilOE] || '--'}</td><td>${rec[recMap.eixoOE] || '--'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="via-impressao">
+                        <div class="print-title">ÓTICAS AMMO</div>
+                        <div class="print-subtitle">CONTROLE INTERNO - VIA CAIXA</div>
+                        <div class="print-section" style="background:#f0f0f0; padding:6px; border-radius:3px;">
+                            <b>OS:</b> ${osNumero} | <b>Data Origem:</b> ${dataVenda}<br>
+                            <b>Vendedor:</b> ${vendedor}<br>
+                            <b>Cliente:</b> ${nomeCliente}<br>
+                        </div>
+                        <div class="print-section">
+                            <b>PRODUTOS:</b><br>${produtos}
+                            <hr style="border-top:1px solid #000; margin: 4px 0;">
+                            <div class="print-row"><span>VALOR TOTAL:</span> <span class="destaque-valor">${totalVenda}</span></div>
+                            <div class="print-row"><span>STATUS DO PAGAMENTO:</span> <b>${statusPagto}</b></div>
+                            <div class="print-row"><span>FORMA DE PGTO:</span> <b>${formaPagto}</b></div>
+                        </div>
+                        <div class="termo-entrega">
+                            <div class="termo-titulo">TERMO DE CONFERÊNCIA E RETIRADA</div>
+                            <div class="termo-desc">Preencher no ato da retirada:</div>
+                            <div class="check-item"><span class="check-box">(   ) Sim   (   ) Não</span> Óculos entregue em perfeito estado?</div>
+                            <div class="check-item"><span class="check-box">(   ) Sim   (   ) Não</span> Recebeu a receita oftálmica original de volta?</div>
+                            <div class="check-item"><span class="check-box">(   ) Sim   (   ) Não</span> Realizou o teste de visão (Longe e Perto)?</div>
+                        </div>
+                        <div class="assinatura-box">
+                            <div class="assinatura-linha">Assinatura do Cliente</div>
+                            <div class="assinatura-linha">Assinatura do Caixa</div>
+                        </div>
+                    </div>`;
+
+                window.print();
+
+                if (tabletFrame) tabletFrame.style.display = 'flex';
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao montar layout de impressão.");
+            } finally {
+                overlay.style.display = 'none';
+                document.getElementById('loading-text').innerText = "Processando...";
+            }
+        }
+
+        function abrirModalEdicao() {
+            if (!linhaSelecionada || modoAtual === 'clientes') {
+                alert("Por favor, selecione um pedido na lista primeiro.");
+                return;
+            }
+            document.getElementById('modal-os-num').innerText = linhaSelecionada[colMap.os];
+            document.getElementById('edit-nome').value = linhaSelecionada[colMap.nome];
+            document.getElementById('edit-total').value = linhaSelecionada[colMap.total];
+            document.getElementById('edit-produto').value = linhaSelecionada[colMap.produtos]; 
+            document.getElementById('edit-pagto').value = linhaSelecionada[colMap.tipo_pagto]; 
+            document.getElementById('edit-status').value = linhaSelecionada[colMap.status_pagto]; 
+            
+            modalEdicao.style.display = 'flex';
+        }
+
+        function fecharModalEdicao() { modalEdicao.style.display = 'none'; }
+
+        async function salvarEdicaoEGerarPDF() {
+            try {
+                fecharModalEdicao();
+                
+                // Mapeando dados editados de volta para a linhaSelecionada para a reimpressão puxar os dados atualizados
+                linhaSelecionada[colMap.nome] = document.getElementById('edit-nome').value;
+                linhaSelecionada[colMap.produtos] = document.getElementById('edit-produto').value;
+                linhaSelecionada[colMap.total] = document.getElementById('edit-total').value;
+                linhaSelecionada[colMap.status_pagto] = document.getElementById('edit-status').value;
+                linhaSelecionada[colMap.tipo_pagto] = document.getElementById('edit-pagto').value;
+
+                await reimprimirOSCompleta();
+            } catch (e) {
+                alert("Erro ao processar PDF.");
+            }
+        }
+
+        function abrirModalSenhaExclusao() {
+            if (!linhaSelecionada) { 
+                alert("Selecione um pedido para excluir."); 
+                return; 
+            }
+            if (modoAtual === 'clientes') { 
+                alert("A tela atual exibe clientes. Selecione a aba OS para excluir pedidos."); 
+                return; 
+            }
+            
+            document.getElementById('exclusao-os-num').innerText = linhaSelecionada[colMap.os];
+            document.getElementById('input-senha-exclusao').value = ''; 
+            modalSenha.style.display = 'flex';
+            document.getElementById('input-senha-exclusao').focus();
+        }
+
+        function fecharModalSenha() { 
+            modalSenha.style.display = 'none'; 
+        }
+
+        async function validarSenhaEExcluir() {
+            const senhaDigitada = document.getElementById('input-senha-exclusao').value;
+            
+            if (senhaDigitada === SENHA_ADMIN || senhaDigitada === SENHA_MASTER) {
+                fecharModalSenha();
+                
+                overlay.style.display = 'flex';
+                document.getElementById('loading-text').innerText = "Excluindo pedido no banco de dados...";
+
+                try {
+                    const osParaExcluir = linhaSelecionada[colMap.os];
+                    
+                    const url = `${URL_BASE_2_PRINCIPAL}?apiCaixa=true&acao=excluir_os&os=${encodeURIComponent(osParaExcluir)}`;
+                    const response = await fetch(url);
+                    const result = await response.json();
+
+                    if (result.erro) {
+                        alert("Erro ao excluir: " + result.erro);
+                    } else {
+                        alert("O.S. excluída com sucesso!");
+                        alterarMenuLateral('os'); 
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Erro de conexão ao tentar excluir a O.S.");
+                } finally {
+                    overlay.style.display = 'none';
+                    document.getElementById('loading-text').innerText = "Processando...";
+                }
+                
+            } else {
+                alert("Senha incorreta. Acesso negado.");
+                document.getElementById('input-senha-exclusao').value = ''; 
+                document.getElementById('input-senha-exclusao').focus();
+            }
+        }
+
+        document.getElementById('input-senha-exclusao').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                validarSenhaEExcluir();
+            }
+        });
+
+        function formatarMoeda(valor) {
+            if (!valor) return 'R$ 0,00';
+            let numStr = valor.toString().replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            const numVal = parseFloat(numStr);
+            return isNaN(numVal) ? valor : numVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return '';
+            if (dataStr.toString().includes('/')) return dataStr; 
+            let d = new Date(dataStr);
+            return isNaN(d.getTime()) ? dataStr : d.toLocaleDateString('pt-BR');
+        }
+    </script>
+</body>
+</html>

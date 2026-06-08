@@ -1,0 +1,46 @@
+CONFIGURAÇÃO AMMO ERP - TABLET MULTILOJA
+
+VERSÃO: Tablet integrado ao AMMO ERP com seleção dinâmica de lojas.
+
+O QUE FOI ALTERADO:
+1. O login do tablet busca as lojas no ERP:
+   GET /integracoes/tablet/lojas
+
+2. O vendedor escolhe a loja no login.
+   O código da loja é salvo em:
+   localStorage.AMMO_ERP_LOJA_CODIGO
+
+3. A tela de venda busca produtos e lentes no ERP pela loja escolhida:
+   GET /integracoes/tablet/produtos?lojaCodigo=CODIGO_DA_LOJA
+
+4. A finalização envia o pedido agrupado para o Caixa PDV:
+   POST /integracoes/tablet/pedido-agrupado
+
+5. O demonstrativo de lentes multi.html e vs.html foi preservado.
+
+URL PADRÃO DA API:
+https://scaling-trout-x57vqq7p4j763v44x-3333.app.github.dev
+
+TOKEN PADRÃO:
+ammo-tablet-dev-token
+
+LOGINS LOCAIS DO TABLET:
+admin / 123456
+admin@ammo.com / 123456
+vendedor / 123456
+vendedor@ammo.com / 123456
+gerente / 123456
+gerente@ammo.com / 123456
+caixa / 123456
+caixa@ammo.com / 123456
+
+LOJA NOVA OLÍMPIA:
+LOJA-NOVA-OLIMPIA
+
+PARA TROCAR A URL DA API NO TABLET:
+Abra o console do navegador e rode:
+
+localStorage.setItem('AMMO_ERP_BASE_URL', 'https://SUA-URL-3333.app.github.dev');
+localStorage.setItem('AMMO_ERP_TOKEN', 'ammo-tablet-dev-token');
+
+Depois recarregue a página.

@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADASTRO CLIENTES - PDV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root { 
+            --ammo-navy: #0A2342; 
+            --ammo-gold: #FFC107; 
+            --ammo-light: #f4f7f9;
+            --ammo-gray: #e9ecef;
+            --transition-speed: 0.3s;
+        }
+        
+        /* Layout Tela Cheia */
+        html, body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: var(--ammo-light); 
+            font-family: 'Inter', sans-serif; 
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        #sistemaPDV {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Card Principal Tela Cheia */
+        .card { 
+            border: none; 
+            border-radius: 0;
+            box-shadow: none; 
+            margin-bottom: 0; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-header { 
+            background: var(--ammo-navy); 
+            color: white; 
+            border-radius: 0 !important; 
+            font-weight: 600; 
+            letter-spacing: 0.5px;
+            padding: 15px 20px !important;
+            border-bottom: 4px solid var(--ammo-gold);
+            flex-shrink: 0;
+        }
+        
+        .card-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px !important;
+        }
+
+        /* Stepper de Progresso */
+        .stepper-wrapper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 10%;
+            position: relative;
+        }
+        .stepper-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 15%;
+            right: 15%;
+            height: 3px;
+            background: var(--ammo-gray);
+            z-index: 1;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #a0aab5;
+            transition: var(--transition-speed);
+        }
+        .step.active { color: var(--ammo-navy); }
+        .step.completed { color: #198754; }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 3px solid var(--ammo-gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-bottom: 8px;
+            transition: var(--transition-speed);
+        }
+        .step.active .step-circle {
+            border-color: var(--ammo-gold);
+            background: var(--ammo-navy);
+            color: var(--ammo-gold);
+        }
+        .step.completed .step-circle {
+            border-color: #198754;
+            background: #198754;
+            color: white;
+        }
+
+        /* Campos de Formulário */
+        label { 
+            font-weight: 600; 
+            font-size: 0.8rem; 
+            color: #55606e; 
+            margin-bottom: 6px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            transition: all var(--transition-speed);
+            background-color: #fafbfc;
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--ammo-gold); 
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.15); 
+            background-color: #fff;
+        }
+        .bg-light { background-color: #f8f9fa !important; }
+        
+        /* Botões Modernos */
+        .btn-ammo { 
+            background: var(--ammo-gold); 
+            border: none; 
+            color: var(--ammo-navy); 
+            font-weight: 700; 
+            padding: 14px 24px; 
+            border-radius: 10px;
+            transition: all var(--transition-speed); 
+            letter-spacing: 0.5px;
+        }
+        .btn-ammo:hover { 
+            background: #f1b600; 
+            color: var(--ammo-navy); 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+        }
+        .btn-outline-custom {
+            border: 2px solid var(--ammo-navy);
+            color: var(--ammo-navy);
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 12px 24px;
+            transition: all var(--transition-speed);
+        }
+        .btn-outline-custom:hover {
+            background: var(--ammo-navy);
+            color: white;
+        }
+
+        /* Box de Informações */
+        .bg-receita-box { 
+            background-color: #ffffff; 
+            border: 1px solid rgba(10, 35, 66, 0.08); 
+            border-radius: 16px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            padding: 20px;
+        }
+        .header-receita { 
+            background-color: #f1f4f8; 
+            color: var(--ammo-navy); 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+        }
+        
+        /* Animações e Outros */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .radio-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; display: flex; justify-content: space-around; }
+        .loading-cpf { background-image: url('https://i.gifer.com/ZZ5H.gif'); background-size: 20px; background-repeat: no-repeat; background-position: 98% center; }
+        
+        .produto-item { cursor: pointer; padding: 15px; border-bottom: 1px solid #f1f4f8; transition: var(--transition-speed); background: #fff; border-radius: 8px; margin-bottom: 5px;}
+        .produto-item:hover { background-color: rgba(255, 193, 7, 0.08); border-left: 4px solid var(--ammo-gold); padding-left: 19px; }
+        
+        /* Ajuste de Altura Dinâmica para Tela Cheia */
+        .lista-produtos { height: calc(100vh - 280px); overflow-y: auto; padding: 5px; }
+        .carrinho-lista { height: calc(100vh - 650px); min-height: 200px; overflow-y: auto; padding-right: 5px;}
+        
+        .total-box { 
+            background: linear-gradient(135deg, var(--ammo-navy), #1a3a60);
+            color: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 8px 20px rgba(10, 35, 66, 0.2);
+            border: 1px solid rgba(255,193,7, 0.3);
+        }
+        .total-box .text-gold { color: var(--ammo-gold); }
+
+        /* ==========================================
+           LAYOUT DE IMPRESSÃO - A4 SUPER REDUZIDO
+           ========================================== */
+        #areaImpressao {
+            font-family: 'Inter', Helvetica, sans-serif;
+            color: #111;
+            background: #fff;
+            width: 790px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .pdf-via {
+            padding: 4px 10px; /* Reduzido */
+            margin-bottom: 6px; /* Reduzido */
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            position: relative;
+            background-color: #fff;
+            page-break-inside: avoid;
+        }
+
+        .pdf-via:not(:last-child)::after {
+            content: '✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -';
+            position: absolute;
+            bottom: -11px; /* Ajustado */
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #adb5bd;
+            font-size: 10px; /* Reduzido */
+            letter-spacing: 2px;
+        }
+
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--ammo-navy);
+            padding-bottom: 4px; /* Reduzido */
+            margin-bottom: 6px; /* Reduzido */
+        }
+        
+        .pdf-logo {
+            max-height: 25px; /* Reduzido bastante */
+            object-fit: contain;
+        }
+        
+        .pdf-title-box { text-align: right; }
+        .pdf-title {
+            font-size: 13px; /* Reduzido */
+            font-weight: 800;
+            color: var(--ammo-navy);
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        .pdf-via-name {
+            font-size: 9px; /* Reduzido */
+            font-weight: 700;
+            color: #fff;
+            background: var(--ammo-navy);
+            padding: 2px 6px; /* Reduzido */
+            border-radius: 3px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        
+        .pdf-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px; /* Reduzido */
+            font-size: 10.5px; /* Ligeiramente reduzido */
+            margin-bottom: 6px; /* Reduzido */
+            background: #f8f9fa;
+            padding: 6px 10px; /* Reduzido */
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .pdf-info-grid span { display: block; margin-bottom: 2px;}
+        .pdf-info-grid strong { color: var(--ammo-navy); }
+
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5px;
+            margin-bottom: 6px; /* Reduzido */
+            border: 1px solid #dee2e6;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #dee2e6;
+            padding: 4px 6px; /* Reduzido */
+            text-align: left;
+        }
+        .pdf-table th {
+            background-color: var(--ammo-navy) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 9.5px;
+            -webkit-print-color-adjust: exact;
+        }
+        .pdf-table td.center { text-align: center; }
+        .pdf-table td.right { text-align: right; }
+        
+        .pdf-totals-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 6px 10px; /* Reduzido */
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-bottom: 6px; /* Reduzido */
+        }
+
+        .pdf-termo {
+            font-size: 10px;
+            border: 1px solid #ced4da;
+            background: #fdfdfd;
+            padding: 6px 10px; /* Reduzido */
+            border-radius: 6px;
+            margin-bottom: 6px; /* Reduzido */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pdf-signatures { display: flex; justify-content: space-around; margin-top: 15px; margin-bottom: 2px; }
+        .pdf-sign-line {
+            width: 40%;
+            border-top: 1px solid #333;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            padding-top: 2px;
+        }
+        
+        .pdf-footer-msg {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #555;
+            margin-top: 6px;
+            padding: 4px;
+            border-top: 1px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid p-0" id="sistemaPDV">
+    <div class="row g-0 h-100">
+        <div class="col-12 h-100"> 
+            
+            <div class="card" id="cardPrincipal">
+                <div class="card-header text-center" id="tituloCard">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-store me-2"></i>SISTEMA DE VENDAS PDV</h4>
+                </div>
+                
+                <div class="card-body bg-white">
+                    
+                    <div class="stepper-wrapper">
+                        <div class="step active" id="st-cliente">
+                            <div class="step-circle">1</div>
+                            <span class="fw-bold small">Cliente</span>
+                        </div>
+                        <div class="step" id="st-receita">
+                            <div class="step-circle">2</div>
+                            <span class="fw-bold small">Receita</span>
+                        </div>
+                        <div class="step" id="st-venda">
+                            <div class="step-circle">3</div>
+                            <span class="fw-bold small">Venda</span>
+                        </div>
+                    </div>
+
+                    <div id="moduloCliente" class="fade-in container-fluid px-0 px-md-4">
+                        <h5 class="text-secondary mb-4 border-bottom pb-2"><i class="fas fa-user-plus me-2 text-primary"></i>Dados do Cliente</h5>
+                        <form id="formPDV">
+                            <div class="mb-4">
+                                <label><i class="fas fa-id-badge me-2"></i>Consultor(a) de Vendas</label>
+                                <select class="form-select border-primary bg-light" id="vendedor" required>
+                                    <option value="">Carregando...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label>CPF (Busca Automática)</label>
+                                    <input type="text" class="form-control border-primary shadow-sm" id="cpf" placeholder="000.000.000-00">
+                                </div>
+                                <div class="col-md-8">
+                                    <label>Nome Completo do Cliente</label>
+                                    <input type="text" class="form-control" id="nome" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label>Data de Nascimento</label>
+                                    <input type="date" class="form-control" id="nascimento">
+                                </div>
+                                <div class="col-md-8">
+                                    <label>Sexo</label>
+                                    <div class="radio-box">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sexo" id="m" value="M" checked>
+                                            <label class="form-check-label text-capitalize" for="m">Masculino</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sexo" id="f" value="F">
+                                            <label class="form-check-label text-capitalize" for="f">Feminino</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sexo" id="o" value="O">
+                                            <label class="form-check-label text-capitalize" for="o">Outros</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 mb-4 bg-light" style="border-radius: 12px;">
+                                <h6 class="text-primary mb-3 fw-bold"><i class="fas fa-map-marker-alt me-2"></i>Endereço</h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label>CEP</label>
+                                        <input type="text" class="form-control bg-white" id="cep" placeholder="00000-000">
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label>Rua / Logradouro</label>
+                                        <input type="text" class="form-control bg-white" id="rua">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Número</label>
+                                        <input type="text" class="form-control bg-white" id="numero" required>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label>Bairro</label>
+                                        <input type="text" class="form-control bg-white" id="bairro">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Complemento</label>
+                                        <input type="text" class="form-control bg-white" id="complemento" placeholder="Apto, Bloco, etc.">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Cidade / UF</label>
+                                        <input type="text" class="form-control bg-white" id="cidade_uf" placeholder="Cidade - UF">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label>E-mail</label>
+                                    <input type="email" class="form-control" id="email" placeholder="cliente@email.com">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label>Telefone 01 (Celular)</label>
+                                    <input type="text" class="form-control border-primary shadow-sm" id="tel1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Telefone 02 (Opcional)</label>
+                                    <input type="text" class="form-control" id="tel2">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label>Observações Gerais</label>
+                                <textarea class="form-control" id="obs" rows="2" placeholder="Ex: Cliente prefere ser contatado pelo WhatsApp..."></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-ammo px-5" id="btnSalvarCliente">
+                                    Avançar para Receita <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="moduloReceita" style="display: none;" class="fade-in container-fluid px-0 px-md-4">
+                        <div class="alert alert-primary py-3 mb-4 d-flex align-items-center rounded-3 border-0 bg-light">
+                            <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                            <div>
+                                <h6 class="mb-0 text-secondary">Cliente Selecionado</h6>
+                                <strong class="fs-5 nomeClienteDisplay text-dark"></strong>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label>Nome do Médico / Clínica</label>
+                                <input type="text" class="form-control" id="medico" placeholder="Dr. / Dra.">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Data da Receita</label>
+                                <input type="date" class="form-control" id="dataReceita">
+                            </div>
+                        </div>
+
+                        <div class="bg-receita-box mb-4">
+                            <div class="text-center header-receita mb-3"><i class="fas fa-eye me-2"></i> Visão para Longe</div>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-2 text-center fw-bold text-primary fs-5">OD</div>
+                                <div class="col-3"><input type="text" inputmode="decimal" class="form-control text-center" id="lOdEsf" placeholder="Esférico" onchange="travarDioptria(this, false)"></div>
+                                <div class="col-3"><input type="text" inputmode="decimal" class="form-control text-center" id="lOdCil" placeholder="Cilíndrico" onchange="travarDioptria(this, true)"></div>
+                                <div class="col-4"><input type="number" class="form-control text-center" id="lOdEixo" placeholder="Eixo"></div>
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col-2 text-center fw-bold text-primary fs-5">OE</div>
+                                <div class="col-3"><input type="text" inputmode="decimal" class="form-control text-center" id="lOeEsf" placeholder="Esférico" onchange="travarDioptria(this, false)"></div>
+                                <div class="col-3"><input type="text" inputmode="decimal" class="form-control text-center" id="lOeCil" placeholder="Cilíndrico" onchange="travarDioptria(this, true)"></div>
+                                <div class="col-4"><input type="number" class="form-control text-center" id="lOeEixo" placeholder="Eixo"></div>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-md-4 text-center">
+                                <label class="fw-bold text-warning" style="font-size: 1rem;"><i class="fas fa-plus-circle me-1"></i> ADIÇÃO (+)</label>
+                                <input type="text" inputmode="decimal" class="form-control form-control-lg text-center border-warning shadow-sm" style="font-size: 1.5rem;" id="adicao" placeholder="0.00" onchange="travarDioptria(this, false, true)">
+                            </div>
+                        </div>
+
+                        <div class="bg-receita-box mb-4" style="background-color: #f8f9fa;">
+                            <div class="text-center header-receita mb-3 bg-secondary text-white"><i class="fas fa-glasses me-2"></i> Visão para Perto (Calculado)</div>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-2 text-center fw-bold text-secondary fs-5">OD</div>
+                                <div class="col-3"><input type="text" class="form-control text-center bg-white" id="pOdEsf" placeholder="Esférico" readonly></div>
+                                <div class="col-3"><input type="text" class="form-control text-center bg-white" id="pOdCil" placeholder="Cilíndrico" readonly></div>
+                                <div class="col-4"><input type="text" class="form-control text-center bg-white" id="pOdEixo" placeholder="Eixo" readonly></div>
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col-2 text-center fw-bold text-secondary fs-5">OE</div>
+                                <div class="col-3"><input type="text" class="form-control text-center bg-white" id="pOeEsf" placeholder="Esférico" readonly></div>
+                                <div class="col-3"><input type="text" class="form-control text-center bg-white" id="pOeCil" placeholder="Cilíndrico" readonly></div>
+                                <div class="col-4"><input type="text" class="form-control text-center bg-white" id="pOeEixo" placeholder="Eixo" readonly></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-receita-box mb-4" style="border: 2px solid #e0f2fe;">
+                            <div class="text-center header-receita mb-3" style="background-color: #0dcaf0; color: #000;"><i class="fas fa-ruler me-2"></i> Medidas DNP e Altura</div>
+                            <div class="row text-center mb-2">
+                                <div class="col-2"></div>
+                                <div class="col-5 fw-bold text-info">DNP (mm)</div>
+                                <div class="col-5 fw-bold text-info">ALTURA (mm)</div>
+                            </div>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-2 text-center fw-bold text-primary fs-5">OD</div>
+                                <div class="col-5"><input type="number" step="0.1" class="form-control text-center" id="dnpOd" placeholder="Ex: 32"></div>
+                                <div class="col-5"><input type="number" step="0.1" class="form-control text-center" id="altOd" placeholder="Ex: 22"></div>
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col-2 text-center fw-bold text-primary fs-5">OE</div>
+                                <div class="col-5"><input type="number" step="0.1" class="form-control text-center" id="dnpOe" placeholder="Ex: 33"></div>
+                                <div class="col-5"><input type="number" step="0.1" class="form-control text-center" id="altOe" placeholder="Ex: 22"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-receita-box mb-4" style="border: 2px solid #fff3cd;">
+                            <div class="text-center header-receita mb-3" style="background-color: var(--ammo-gold); color: var(--ammo-navy);"><i class="fas fa-glasses me-2"></i> Medidas e Dados da Armação</div>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label>Horizontal maior da lente</label>
+                                    <input type="number" step="0.1" class="form-control text-center" id="armHorizontal" placeholder="Ex: 54">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Vertical maior da lente</label>
+                                    <input type="number" step="0.1" class="form-control text-center" id="armVertical" placeholder="Ex: 38">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Ponte</label>
+                                    <input type="number" step="0.1" class="form-control text-center" id="armPonte" placeholder="Ex: 18">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Diagonal maior da lente</label>
+                                    <input type="number" step="0.1" class="form-control text-center" id="armDiagonal" placeholder="Ex: 58">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label>Altura da pupila</label>
+                                    <input type="number" step="0.1" class="form-control text-center" id="armAlturaPupila" placeholder="Ex: 24">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Tipo de armação</label>
+                                    <select class="form-select" id="armTipo">
+                                        <option value="">Selecione...</option>
+                                        <option value="Fio de Nylon">Fio de Nylon</option>
+                                        <option value="Aro Fechado">Aro Fechado</option>
+                                        <option value="3 Peças">3 Peças</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Marca</label>
+                                    <input type="text" class="form-control" id="armMarca" placeholder="Marca da armação">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>Modelo</label>
+                                    <input type="text" class="form-control" id="armModelo" placeholder="Modelo / referência">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Cor</label>
+                                    <input type="text" class="form-control" id="armCor" placeholder="Cor da armação">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-custom" onclick="navegarAbas('cliente')">
+                                <i class="fas fa-arrow-left me-2"></i> Voltar
+                            </button>
+                            <button type="button" class="btn btn-ammo px-5" id="btnSalvarReceita" onclick="enviarReceita()">
+                                Ir para Orçamento <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="moduloVendas" style="display: none;" class="fade-in container-fluid px-0 px-md-4">
+                        <div class="alert alert-primary py-3 mb-4 d-flex align-items-center rounded-3 border-0 bg-light">
+                            <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                            <div>
+                                <h6 class="mb-0 text-secondary">Cliente Selecionado</h6>
+                                <strong class="fs-5 nomeClienteDisplay text-dark"></strong>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 h-100">
+                            <div class="col-lg-7 d-flex flex-column">
+                                <div class="bg-receita-box flex-grow-1 p-4 d-flex flex-column">
+                                    <div class="text-center header-receita mb-3 bg-primary text-white">
+                                        <i class="fas fa-shopping-cart me-2"></i>CARRINHO DE COMPRAS
+                                    </div>
+                                    
+                                    <div class="carrinho-lista mb-4 flex-grow-1" id="areaCarrinho">
+                                        <div class="text-muted small text-center mt-5 mb-5">
+                                            <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i><br>
+                                            Nenhum produto adicionado.<br>Pesquise e clique no catálogo ao lado.
+                                        </div>
+                                    </div>
+                                    
+                                    <hr class="mb-4">
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-12 mb-3">
+                                            <label>Subtotal (R$)</label>
+                                            <input type="text" class="form-control bg-light fw-bold fs-5" id="subtotal" value="0.00" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="text-danger fw-bold">Desconto (-)</label>
+                                            <input type="number" step="0.01" class="form-control border-danger text-danger" id="vDesconto" placeholder="0.00" oninput="calcularTotalVenda()">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="text-primary fw-bold">Acréscimo (+)</label>
+                                            <input type="number" step="0.01" class="form-control border-primary text-primary" id="vAcrescimo" placeholder="0.00" oninput="calcularTotalVenda()">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="total-box text-center mb-4" id="boxTotal">
+                                        <span class="d-block mb-1" style="font-size: 1rem; opacity: 0.9;">TOTAL DA COMPRA</span>
+                                        <span id="vTotalDisplay" class="text-gold fw-bold" style="font-size: 2.5rem; letter-spacing: 1px;">R$ 0,00</span>
+                                    </div>
+
+                                    <div class="text-center header-receita mb-3 bg-secondary text-white">
+                                        <i class="fas fa-money-check-alt me-2"></i>PAGAMENTO E RETIRADA
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="text-primary">Data de Retirada / Entrega</label>
+                                            <input type="date" class="form-control border-primary" id="dataEntrega" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-success">Valor Pago (Entrada R$)</label>
+                                            <input type="number" step="0.01" class="form-control border-success bg-light fw-bold" id="valorEntrada" placeholder="0.00" oninput="calcularTotalVenda()">
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label>Condição (Do Saldo Restante)</label>
+                                            <div class="d-flex gap-3 mt-1 bg-light p-2 rounded border">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="condicao" id="condAvista" value="A Vista" checked onchange="mudarParcelas()">
+                                                    <label class="form-check-label" for="condAvista">À Vista</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="condicao" id="condParcelado" value="Parcelado" onchange="mudarParcelas()">
+                                                    <label class="form-check-label" for="condParcelado">Parcelado</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label>Forma de Pgto</label>
+                                            <select class="form-select border-success bg-light" id="formaPgto">
+                                                <option>Dinheiro</option>
+                                                <option>Pix</option>
+                                                <option>Cartão de Débito</option>
+                                                <option>Cartão de Crédito</option>
+                                                <option>Boleto</option>
+                                                <option>Bonuscred</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-4 fade-in" id="divParcelas" style="display:none;">
+                                        <div class="col-12">
+                                            <label>Nº de Parcelas do Saldo</label>
+                                            <select class="form-select border-warning shadow-sm" id="qtdParcelas" onchange="calcularTotalVenda()">
+                                                <option value="1">1x</option>
+                                                <option value="2">2x</option>
+                                                <option value="3">3x</option>
+                                                <option value="4">4x</option>
+                                                <option value="5">5x</option>
+                                                <option value="6">6x</option>
+                                                <option value="7">7x</option>
+                                                <option value="8">8x</option>
+                                                <option value="9">9x</option>
+                                                <option value="10">10x</option>
+                                                <option value="11">11x</option>
+                                                <option value="12">12x</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning text-center fw-bold mt-3 border-warning shadow-sm fade-in" id="boxSaldo" style="display:none;">
+                                        <i class="fas fa-exclamation-circle mb-2 fa-lg text-warning"></i><br>
+                                        SALDO DEVEDOR A PAGAR NA RETIRADA:<br>
+                                        <span id="vSaldoDisplay" style="font-size:1.8rem; display:block; margin-top:5px; color:#d39e00;">R$ 0,00</span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="col-lg-5 d-flex flex-column">
+                                <div class="bg-receita-box flex-grow-1 border-primary border d-flex flex-column">
+                                    <div class="text-center header-receita mb-3 bg-light text-dark border"><i class="fas fa-search me-2"></i>CATÁLOGO DE PRODUTOS</div>
+                                    <div class="input-group mb-3 shadow-sm rounded-3">
+                                        <span class="input-group-text bg-white border-primary text-primary"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control border-primary border-start-0 ps-0" id="buscaProduto" placeholder="Pesquisar armação ou lente..." onkeyup="filtrarProdutos()">
+                                    </div>
+                                    <div class="lista-produtos flex-grow-1" id="listaProdutosDisplay">
+                                        <div class="text-center p-5 text-muted">
+                                            <div class="spinner-border text-primary mb-3" role="status"></div><br>
+                                            Sincronizando estoque...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 border-top pt-4">
+                            <button type="button" class="btn btn-outline-custom" onclick="navegarAbas('receita')">
+                                <i class="fas fa-arrow-left me-2"></i> Voltar
+                            </button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning fw-bold px-4 text-dark" type="button" onclick="processarOperacao('orcamento')">
+                                    <i class="fas fa-file-invoice me-2"></i> GERAR ORÇAMENTO
+                                </button>
+                                <button class="btn btn-success fw-bold px-4 shadow" type="button" id="btnFinalVenda" onclick="processarOperacao('venda')">
+                                    <i class="fas fa-check-circle me-2"></i> FINALIZAR VENDA
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="areaImpressao" style="display: none;"></div>
+
+<script src="https://unpkg.com/imask"></script>
+<script>
+    // ==========================================
+    // CONFIGURAÇÕES GERAIS E VARIÁVEIS 
+    // ==========================================
+    // =====================================================
+    // AMMO ERP - INTEGRAÇÃO TABLET SEM GOOGLE APPS SCRIPT
+    // =====================================================
+    let AMMO_ERP_LOJAS = [
+        { codigo: 'LOJA-01', nome: 'AMMO Prime Umuarama' },
+        { codigo: 'LOJA-02', nome: 'Umuarama 1' },
+        { codigo: 'LOJA-03', nome: 'Umuarama 2' },
+        { codigo: 'LOJA-04', nome: 'Douradina' },
+        { codigo: 'LOJA-05', nome: 'Perobal' },
+        { codigo: 'LOJA-06', nome: 'Palotina' },
+        { codigo: 'LOJA-07', nome: 'Marechal 1' },
+        { codigo: 'LOJA-08', nome: 'Marechal 2' },
+        { codigo: 'LOJA-09', nome: 'Toledo' },
+        { codigo: 'LOJA-10', nome: 'Altônia' },
+        { codigo: 'LOJA-NOVA-OLIMPIA', nome: 'Óticas AMMO Express Nova Olímpia' }
+    ];
+
+    function getErpBaseUrl() {
+        return localStorage.getItem('AMMO_ERP_BASE_URL') || 'https://scaling-trout-x57vqq7p4j763v44x-3333.app.github.dev';
+    }
+
+    function getErpToken() {
+        return localStorage.getItem('AMMO_ERP_TOKEN') || 'ammo-tablet-dev-token';
+    }
+
+    function getLojaCodigoAtual() {
+        return localStorage.getItem('AMMO_ERP_LOJA_CODIGO') || 'LOJA-01';
+    }
+
+    function getConsultorEmailAtual() {
+        return localStorage.getItem('consultorEmail') || 'vendedor@ammo.com';
+    }
+
+    async function buscarLojasERP() {
+        const url = `${getErpBaseUrl().replace(/\/$/, '')}/integracoes/tablet/lojas?token=${encodeURIComponent(getErpToken())}`;
+        try {
+            const resposta = await fetch(url, { cache: 'no-store' });
+            if (!resposta.ok) throw new Error('HTTP ' + resposta.status);
+            const lojas = await resposta.json();
+            if (Array.isArray(lojas) && lojas.length > 0) {
+                AMMO_ERP_LOJAS = lojas
+                    .filter(loja => loja && loja.codigo)
+                    .map(loja => ({
+                        codigo: String(loja.codigo),
+                        nome: loja.nome || loja.codigo,
+                        cidade: loja.cidade || '',
+                        estado: loja.estado || '',
+                        cnpj: loja.cnpj || ''
+                    }));
+            }
+        } catch (erro) {
+            console.warn('Não foi possível buscar lojas no ERP. Usando lista local.', erro);
+        }
+        return AMMO_ERP_LOJAS;
+    }
+
+    function getLojaNomeAtual() {
+        const codigo = getLojaCodigoAtual();
+        const loja = AMMO_ERP_LOJAS.find(l => l.codigo === codigo);
+        return loja ? loja.nome : codigo;
+    }
+
+    let estoqueGlobal = []; 
+    let carrinho = [];
+    let vendedorConfirmado = "";
+
+    IMask(document.getElementById('cpf'), { mask: '000.000.000-00' });
+    IMask(document.getElementById('cep'), { mask: '00000-000' });
+    IMask(document.getElementById('tel1'), { mask: '(00) 00000-0000' });
+    IMask(document.getElementById('tel2'), { mask: '(00) 00000-0000' });
+
+    let d = new Date(); 
+    d.setDate(d.getDate() + 7); 
+    document.getElementById('dataEntrega').valueAsDate = d;
+
+    window.onload = async () => {
+        const select = document.getElementById('vendedor'); 
+        select.innerHTML = '<option value="">Carregando...</option>';
+        
+        // LEITURA INICIAL SEM APPS SCRIPT
+        const consultorSalvo = localStorage.getItem('consultorLogado') || 'Vendedor AMMO';
+        const lojaCodigo = getLojaCodigoAtual();
+        const lojaNome = AMMO_ERP_LOJAS.find(l => l.codigo === lojaCodigo)?.nome || lojaCodigo;
+
+        select.innerHTML = `<option value="${consultorSalvo}" selected>${consultorSalvo} - ${lojaNome}</option>`;
+        vendedorConfirmado = consultorSalvo;
+
+        estoqueGlobal = [];
+        document.getElementById('listaProdutosDisplay').innerHTML = "<div class='p-4 text-center text-muted'>Produtos carregados pelo carrinho/lentes. Apps Script removido.</div>";
+
+        const lenteSalva = localStorage.getItem('lente_ammo_pendente') || localStorage.getItem('itensoroticas');
+            if (lenteSalva) {
+                try {
+                    const lente = JSON.parse(lenteSalva);
+                    
+                    // Tratamento unificado para o formato do Multifocal e da VS
+                    const nomeLente = lente.nome || lente.modelo; 
+                    const valorLente = parseFloat(lente.valor || lente.preco) || 0;
+                    const codigoLente = lente.codigo || "LENTE-SIMULADOR";
+                    
+                    addAoCarrinho(codigoLente, nomeLente, valorLente);
+                    
+                    localStorage.removeItem('lente_ammo_pendente');
+                    localStorage.removeItem('itensoroticas');
+                } catch (e) { console.error("Erro ao ler lente", e); }
+            }
+            // --------------------------------------------------------
+
+    };
+
+    // ========================================================
+    // NAVEGAÇÃO ENTRE ABAS
+    // ========================================================
+    function atualizarStepper(stepNumber) {
+        document.querySelectorAll('.step').forEach((el, index) => {
+            el.classList.remove('active', 'completed');
+            if (index < stepNumber - 1) el.classList.add('completed');
+            if (index === stepNumber - 1) el.classList.add('active');
+        });
+    }
+
+    function navegarAbas(destino) {
+        document.getElementById('moduloCliente').style.display = 'none';
+        document.getElementById('moduloReceita').style.display = 'none';
+        document.getElementById('moduloVendas').style.display = 'none';
+
+        if(destino === 'cliente') {
+            document.getElementById('moduloCliente').style.display = 'block';
+            atualizarStepper(1);
+        } else if (destino === 'receita') {
+            document.getElementById('moduloReceita').style.display = 'block';
+            atualizarStepper(2);
+        } else if (destino === 'vendas') {
+            document.getElementById('moduloVendas').style.display = 'block';
+            atualizarStepper(3);
+        }
+    }
+
+    // ========================================================
+    // LÓGICA DE PRODUTOS E CARRINHO
+    // ========================================================
+    async function carregarProdutosERP() {
+        const div = document.getElementById('listaProdutosDisplay');
+        if (div) div.innerHTML = "<div class='p-4 text-center text-muted'><i class='fas fa-spinner fa-spin mb-2'></i><br>Carregando produtos e lentes do ERP...</div>";
+
+        const lojaCodigo = getLojaCodigoAtual();
+        const url = `${getErpBaseUrl().replace(/\/$/, '')}/integracoes/tablet/produtos?lojaCodigo=${encodeURIComponent(lojaCodigo)}&token=${encodeURIComponent(getErpToken())}`;
+
+        try {
+            const resposta = await fetch(url, { cache: 'no-store' });
+            const data = await resposta.json().catch(() => []);
+
+            if (!resposta.ok) {
+                throw new Error(data.message || data.error || 'Erro ao buscar produtos do ERP.');
+            }
+
+            estoqueGlobal = (Array.isArray(data) ? data : []).map(p => ({
+                produtoId: p.id || null,
+                codigo: p.codigoInterno || p.sku || p.codigoBarras || p.id || 'SEM-CODIGO',
+                nome: p.nome || p.descricao || 'Produto sem nome',
+                valor: Number(p.precoVenda || p.valor || p.preco || 0),
+                tipo: p.tipo || '',
+                categoria: p.categoria?.nome || '',
+                estoque: Number(p.estoque?.quantidade ?? p.estoques?.[0]?.quantidade ?? 0)
+            })).filter(p => p.valor > 0);
+
+            renderizarListaProdutos(estoqueGlobal);
+        } catch (erro) {
+            console.error('Erro ao carregar produtos do ERP:', erro);
+            estoqueGlobal = [];
+            if (div) {
+                div.innerHTML = `<div class='p-4 text-center text-danger'><i class='fas fa-triangle-exclamation mb-2 fa-2x'></i><br>Não foi possível carregar produtos do ERP.<br><small>${erro.message || erro}</small></div>`;
+            }
+        }
+    }
+
+    function addAoCarrinhoPorIndice(index) {
+        const produto = estoqueGlobal[index];
+        if (!produto) return;
+        addAoCarrinho(produto.codigo, produto.nome, produto.valor, produto.produtoId);
+    }
+
+    function renderizarListaProdutos(lista) {
+        const div = document.getElementById('listaProdutosDisplay'); 
+        div.innerHTML = "";
+        if(lista.length === 0) { 
+            div.innerHTML = "<div class='p-4 text-center text-muted'><i class='fas fa-search mb-2 fa-2x'></i><br>Nenhum produto encontrado.</div>"; 
+            return; 
+        }
+
+        lista.forEach((p) => {
+            const indexOriginal = estoqueGlobal.findIndex(item => item.codigo === p.codigo && item.nome === p.nome);
+            const etiqueta = p.tipo === 'LENTE' ? 'LENTE' : (p.categoria || p.tipo || 'PRODUTO');
+            const estoqueTexto = p.tipo === 'LENTE' ? 'Tabela de preço' : `Estoque: ${p.estoque || 0}`;
+
+            div.innerHTML += `
+                <div class="produto-item d-flex justify-content-between align-items-center" onclick="addAoCarrinhoPorIndice(${indexOriginal})">
+                    <div>
+                        <span class="badge bg-primary mb-1">${p.codigo}</span>
+                        <span class="badge bg-secondary mb-1">${etiqueta}</span>
+                        <br>
+                        <span style="font-weight: 600; color: #333; font-size: 0.9rem;">${p.nome}</span>
+                        <br><small class="text-muted">${estoqueTexto}</small>
+                    </div>
+                    <div class="text-success fw-bold">R$ ${Number(p.valor || 0).toFixed(2)}</div>
+                </div>`;
+        });
+    }
+
+    function filtrarProdutos() {
+        const termo = document.getElementById('buscaProduto').value.toLowerCase();
+        const filtrados = estoqueGlobal.filter(p => p.nome.toLowerCase().includes(termo) || String(p.codigo).includes(termo));
+        renderizarListaProdutos(filtrados);
+    }
+
+    function addAoCarrinho(codigo, nome, valor, produtoId = null) {
+        const itemExistente = carrinho.find(i => i.codigo === codigo);
+        if(itemExistente) { itemExistente.qtd += 1; } 
+        else { carrinho.push({ codigo, nome, valor: Number(valor || 0), qtd: 1, produtoId }); }
+        atualizarCarrinhoVisual();
+    }
+    
+    function removerDoCarrinho(index) { 
+        carrinho.splice(index, 1); 
+        atualizarCarrinhoVisual(); 
+    }
+    
+    function alterarQtd(index, novaQtd) { 
+        if(novaQtd < 1) return; 
+        carrinho[index].qtd = parseInt(novaQtd); 
+        atualizarCarrinhoVisual(); 
+    }
+
+    function atualizarCarrinhoVisual() {
+        const div = document.getElementById('areaCarrinho'); 
+        div.innerHTML = ""; 
+        let subtotal = 0;
+        if(carrinho.length === 0) {
+            div.innerHTML = '<div class="text-muted small text-center mt-5 mb-5"><i class="fas fa-box-open fa-3x mb-3 opacity-25"></i><br>Nenhum produto adicionado.</div>';
+        } else {
+            carrinho.forEach((item, index) => {
+                const totalItem = item.valor * item.qtd; 
+                subtotal += totalItem;
+                div.innerHTML += `
+                    <div class="d-flex justify-content-between align-items-center bg-white p-3 border rounded-3 mb-2 shadow-sm">
+                        <div style="flex: 2;"><span class="fw-bold text-dark d-block" style="font-size:0.95rem">${item.nome}</span><small class="text-muted">R$ ${item.valor.toFixed(2)} un</small></div>
+                        <div class="d-flex align-items-center mx-3"><input type="number" class="form-control text-center p-1" style="width:60px; font-weight:bold;" value="${item.qtd}" onchange="alterarQtd(${index}, this.value)"></div>
+                        <div class="fw-bold text-success" style="width: 90px; text-align:right;">R$ ${totalItem.toFixed(2)}</div>
+                        <button class="btn btn-sm btn-light text-danger ms-2" onclick="removerDoCarrinho(${index})"><i class="fas fa-trash-alt"></i></button>
+                    </div>`;
+            });
+        }
+        document.getElementById('subtotal').value = subtotal.toFixed(2);
+        calcularTotalVenda();
+    }
+
+    function calcularTotalVenda() {
+        const subtotal = parseFloat(document.getElementById('subtotal').value) || 0;
+        let desconto = parseFloat(document.getElementById('vDesconto').value) || 0;
+
+        // --- TRAVA DE SEGURANÇA AMMO (MÁXIMO 20% DE DESCONTO) INJETADA AQUI ---
+        const limiteDesconto = subtotal * 0.20;
+        if (desconto > limiteDesconto && subtotal > 0) {
+            alert('Atenção: A política comercial do sistema bloqueia descontos superiores a 20%. O valor foi reajustado ao limite máximo permitido.');
+            desconto = limiteDesconto;
+            document.getElementById('vDesconto').value = desconto.toFixed(2);
+        }
+        // ----------------------------------------------------------------------
+
+        const acrescimo = parseFloat(document.getElementById('vAcrescimo').value) || 0;
+        const entrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
+        
+        let totalBase = subtotal - desconto + acrescimo;
+        if(totalBase < 0) totalBase = 0;
+        
+        let restanteBase = totalBase - entrada;
+        if(restanteBase < 0) restanteBase = 0;
+        
+        const condicaoElement = document.querySelector('input[name="condicao"]:checked');
+        const condicao = condicaoElement ? condicaoElement.value : 'A Vista';
+        
+        let saldoDevedorFinal = restanteBase;
+        let textoDescricaoParcelas = "";
+
+        if (condicao === 'Parcelado' && restanteBase > 0) {
+            const qtdParcelas = parseInt(document.getElementById('qtdParcelas').value) || 1;
+            if (qtdParcelas > 1) {
+                let valorParcelaBase = restanteBase / qtdParcelas;
+                // JUROS REMOVIDOS - O saldo final é igual ao restante parcelado
+                saldoDevedorFinal = restanteBase; 
+                textoDescricaoParcelas = `<br><span style="font-size: 1rem; color: #0dcaf0; font-weight: bold; background: white; padding: 4px 10px; border-radius: 6px; margin-top: 8px; display: inline-block;">${qtdParcelas}x de ${valorParcelaBase.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`;
+            }
+        }
+        
+        document.getElementById('vTotalDisplay').innerHTML = totalBase.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('vTotalDisplay').dataset.valor = totalBase.toFixed(2); 
+
+        if(entrada > 0 || condicao === 'Parcelado') {
+            document.getElementById('boxSaldo').style.display = 'block';
+            document.getElementById('vSaldoDisplay').innerHTML = saldoDevedorFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + textoDescricaoParcelas;
+            document.getElementById('vSaldoDisplay').dataset.valor = saldoDevedorFinal.toFixed(2);
+            document.getElementById('vSaldoDisplay').dataset.parcelatexto = (condicao === 'Parcelado' && restanteBase > 0 && parseInt(document.getElementById('qtdParcelas').value) > 1) ? `(${document.getElementById('qtdParcelas').value}x)` : '';
+        } else {
+            document.getElementById('boxSaldo').style.display = 'none';
+            document.getElementById('vSaldoDisplay').dataset.valor = "0.00";
+            document.getElementById('vSaldoDisplay').dataset.parcelatexto = "";
+        }
+    }
+
+    function mudarParcelas() {
+        const condicao = document.querySelector('input[name="condicao"]:checked').value;
+        const divParc = document.getElementById('divParcelas');
+        const formaPgto = document.getElementById('formaPgto');
+
+        if(condicao === 'Parcelado') { 
+            divParc.style.display = 'flex'; 
+            // Mostra apenas opções compatíveis com parcelamento
+            formaPgto.innerHTML = `
+                <option>Cartão de Crédito</option>
+                <option>Boleto</option>
+                <option>Bonuscred</option>
+            `;
+        } else { 
+            divParc.style.display = 'none'; 
+            document.getElementById('qtdParcelas').value = "1"; 
+            // Restaura todas as opções para A Vista
+            formaPgto.innerHTML = `
+                <option>Dinheiro</option>
+                <option>Pix</option>
+                <option>Cartão de Débito</option>
+                <option>Cartão de Crédito</option>
+                <option>Boleto</option>
+                <option>Bonuscred</option>
+            `;
+        }
+        calcularTotalVenda();
+    }
+
+    // =========================================================================
+    // INTEGRAÇÃO VIACEP E DADOS
+    // =========================================================================
+    document.getElementById('cep').addEventListener('blur', function() {
+        let v = this.value.replace(/\D/g,'');
+        if(v.length === 8) { 
+            fetch(`https://viacep.com.br/ws/${v}/json/`)
+            .then(r => r.json())
+            .then(d => { 
+                if(!d.erro) {
+                    document.getElementById('rua').value = d.logradouro || "";
+                    document.getElementById('bairro').value = d.bairro || "";
+                    document.getElementById('cidade_uf').value = `${d.localidade} - ${d.uf}`;
+                    document.getElementById('numero').focus();
+                } 
+            }); 
+        }
+    });
+
+    document.getElementById('cpf').addEventListener('blur', async function() {
+        // Consulta automática por CPF removida junto com o Google Apps Script.
+        // O cadastro continua manual e o pedido final é enviado ao AMMO ERP.
+        return;
+    });
+
+    function travarDioptria(elemento, isCilindro, isAdicao = false) {
+        if (!elemento.value) { calcularPerto(); return; } 
+        let valor = parseFloat(String(elemento.value).replace(',', '.')); 
+        if (isNaN(valor)) { elemento.value = ""; calcularPerto(); return; }
+        valor = Math.round(valor * 4) / 4; 
+        if (isCilindro && valor > 0) valor = -valor; 
+        if (isAdicao && valor < 0) valor = Math.abs(valor); 
+        elemento.value = (valor > 0 && !isCilindro ? "+" : "") + valor.toFixed(2); 
+        calcularPerto();
+    }
+
+    function formatarDataBR(dataString) {
+        if(!dataString) return '___/___/_____';
+        let d = new Date(dataString + 'T00:00:00'); 
+        return d.toLocaleDateString('pt-BR');
+    }
+
+    // ========================================================
+    // GERAÇÃO DE HTML PARA O PDF (LAYOUT PROFISSIONAL A4 PREENCHIDO E LEGÍVEL)
+    // ========================================================
+    function montarHtmlImpressao(dadosVenda) {
+        const divImpressao = document.getElementById('areaImpressao');
+        
+        // ----------------------------------------------------
+        // SUBSTITUA AQUI PELO LINK DA SUA LOGOMARCA OFICIAL
+        // ----------------------------------------------------
+        const urlLogoEmpresa = "https://via.placeholder.com/300x80/0A2342/FFFFFF?text=O+T+I+C+A+S+++A+M+M+O"; 
+        
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+        const osNumero = dadosVenda.idVenda; 
+        const dataRetiradaFormatada = formatarDataBR(document.getElementById('dataEntrega').value);
+        const vendedor = dadosVenda.vendedor;
+        const nomeCliente = dadosVenda.nomeCliente;
+        const cpfCliente = document.getElementById('cpf').value || 'Não informado';
+        const telCliente = document.getElementById('tel1').value || 'Não informado';
+        
+        // Endereço formatado se preenchido
+        const rua = document.getElementById('rua').value || '';
+        const num = document.getElementById('numero').value || '';
+        const bairro = document.getElementById('bairro').value || '';
+        const cid = document.getElementById('cidade_uf').value || '';
+        const enderecoCliente = rua ? `${rua}, ${num} - ${bairro}, ${cid}` : 'Não informado';
+        
+        // Tabela de Produtos (Linhas)
+        let linhasProdutosHTML = "";
+        carrinho.forEach(item => { 
+            linhasProdutosHTML += `<tr>
+                <td class="center">${item.qtd}</td>
+                <td>${item.nome}</td>
+                <td class="right">R$ ${item.valor.toFixed(2)}</td>
+                <td class="right fw-bold">R$ ${(item.valor * item.qtd).toFixed(2)}</td>
+            </tr>`; 
+        });
+
+        // Valores
+        const totalBaseTexto = parseFloat(document.getElementById('vTotalDisplay').dataset.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const entradaValor = parseFloat(document.getElementById('valorEntrada').value || 0);
+        const entradaTexto = entradaValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saldoValor = parseFloat(document.getElementById('vSaldoDisplay').dataset.valor || 0);
+        const saldoTexto = saldoValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const textParcelaExtra = document.getElementById('vSaldoDisplay').dataset.parcelatexto || '';
+        const formaPgto = dadosVenda.formaPagamento;
+
+        // Tabelas de Receita Oftálmica
+        const tabelaReceitaHTML = `
+            <table class="pdf-table">
+                <tr><th colspan="6" class="center">VISÃO PARA LONGE</th></tr>
+                <tr><th class="center">Olho</th><th class="center">Esférico</th><th class="center">Cilíndrico</th><th class="center">Eixo</th><th class="center">DNP</th><th class="center">Altura</th></tr>
+                <tr><td class="center fw-bold">OD</td><td class="center">${document.getElementById('lOdEsf').value}</td><td class="center">${document.getElementById('lOdCil').value}</td><td class="center">${document.getElementById('lOdEixo').value}</td><td class="center">${document.getElementById('dnpOd').value}</td><td class="center">${document.getElementById('altOd').value}</td></tr>
+                <tr><td class="center fw-bold">OE</td><td class="center">${document.getElementById('lOeEsf').value}</td><td class="center">${document.getElementById('lOeCil').value}</td><td class="center">${document.getElementById('lOeEixo').value}</td><td class="center">${document.getElementById('dnpOe').value}</td><td class="center">${document.getElementById('altOe').value}</td></tr>
+                
+                <tr><th colspan="6" class="center">VISÃO PARA PERTO</th></tr>
+                <tr><th class="center">Olho</th><th class="center">Esférico</th><th class="center">Cilíndrico</th><th class="center">Eixo</th><th colspan="2" class="center">Adição (ADD)</th></tr>
+                <tr><td class="center fw-bold">OD</td><td class="center">${document.getElementById('pOdEsf').value}</td><td class="center">${document.getElementById('pOdCil').value}</td><td class="center">${document.getElementById('pOdEixo').value}</td><td colspan="2" rowspan="2" class="center" style="vertical-align:middle; font-weight:800; font-size:14px; background:#f0f0f0;">${document.getElementById('adicao').value}</td></tr>
+                <tr><td class="center fw-bold">OE</td><td class="center">${document.getElementById('pOeEsf').value}</td><td class="center">${document.getElementById('pOeCil').value}</td><td class="center">${document.getElementById('pOeEixo').value}</td></tr>
+
+                <tr><th colspan="6" class="center">MEDIDAS E DADOS DA ARMAÇÃO</th></tr>
+                <tr><th class="center">Horizontal</th><th class="center">Vertical</th><th class="center">Ponte</th><th class="center">Diagonal</th><th class="center">Alt. Pupila</th><th class="center">Tipo</th></tr>
+                <tr><td class="center">${document.getElementById('armHorizontal').value}</td><td class="center">${document.getElementById('armVertical').value}</td><td class="center">${document.getElementById('armPonte').value}</td><td class="center">${document.getElementById('armDiagonal').value}</td><td class="center">${document.getElementById('armAlturaPupila').value}</td><td class="center">${document.getElementById('armTipo').value}</td></tr>
+                <tr><th colspan="2" class="center">Marca</th><th colspan="2" class="center">Modelo</th><th colspan="2" class="center">Cor</th></tr>
+                <tr><td colspan="2" class="center">${document.getElementById('armMarca').value}</td><td colspan="2" class="center">${document.getElementById('armModelo').value}</td><td colspan="2" class="center">${document.getElementById('armCor').value}</td></tr>
+            </table>
+        `;
+
+        if (dadosVenda.tipo === 'orcamento') {
+            divImpressao.innerHTML = `
+                <div class="pdf-via">
+                    <div class="pdf-header">
+                        <img src="${urlLogoEmpresa}" class="pdf-logo" alt="Logo">
+                        <div class="pdf-title-box">
+                            <h2 class="pdf-title">ORÇAMENTO OFICIAL</h2>
+                            <span class="pdf-via-name">VÁLIDO POR 48 HORAS</span>
+                        </div>
+                    </div>
+                    <div class="pdf-info-grid">
+                        <div>
+                            <span><strong>Nº Registro:</strong> ${osNumero}</span>
+                            <span><strong>Emissão:</strong> ${dataAtual}</span>
+                        </div>
+                        <div>
+                            <span><strong>Cliente:</strong> ${nomeCliente}</span>
+                            <span><strong>CPF:</strong> ${cpfCliente}</span>
+                        </div>
+                        <div>
+                            <span><strong>Contato:</strong> ${telCliente}</span>
+                            <span><strong>Colaborador(a):</strong> ${vendedor}</span>
+                        </div>
+                    </div>
+                    <table class="pdf-table">
+                        <tr><th class="center" style="width:10%;">QTD</th><th>DESCRIÇÃO DO PRODUTO</th><th class="right" style="width:20%;">V. UNIT</th><th class="right" style="width:20%;">TOTAL</th></tr>
+                        ${linhasProdutosHTML}
+                    </table>
+                    <div class="pdf-totals-inline">
+                        <span>ORÇAMENTO - ÓTICAS AMMO</span>
+                        <span>VALOR TOTAL: <span style="font-size: 14px; color: var(--ammo-navy);">${totalBaseTexto}</span></span>
+                    </div>
+                </div>`;
+        } else {
+            divImpressao.innerHTML = `
+                <div class="pdf-via">
+                    <div class="pdf-header">
+                        <img src="${urlLogoEmpresa}" class="pdf-logo" alt="Logo">
+                        <div class="pdf-title-box">
+                            <h2 class="pdf-title">ORDEM DE SERVIÇO</h2>
+                            <span class="pdf-via-name">1. VIA LABORATÓRIO</span>
+                        </div>
+                    </div>
+                    <div class="pdf-info-grid">
+                        <div>
+                            <span><strong>Nº O.S.:</strong> ${osNumero}</span>
+                            <span><strong>Data:</strong> ${dataAtual}</span>
+                            <span><strong>Colab.:</strong> ${vendedor}</span>
+                        </div>
+                        <div>
+                            <span><strong>Previsão:</strong> <b style="color:red;">${dataRetiradaFormatada}</b></span>
+                            <span><strong>Endereço:</strong> ${enderecoCliente}</span>
+                            <span><strong>F. Pgto:</strong> ${formaPgto}</span>
+                        </div>
+                        <div>
+                            <span style="color:green;"><strong>Sinal:</strong> ${entradaTexto}</span>
+                            <span style="color:#d32f2f;"><strong>A Receber:</strong> ${saldoTexto}</span>
+                        </div>
+                    </div>
+                    <table class="pdf-table">
+                        <tr><th class="center" style="width:10%;">QTD</th><th>DESCRIÇÃO DA ARMAÇÃO / LENTES</th></tr>
+                        ${carrinho.map(item => `<tr><td class="center fw-bold">${item.qtd}</td><td>${item.nome}</td></tr>`).join('')}
+                    </table>
+                    ${tabelaReceitaHTML}
+                </div>
+
+                <div class="pdf-via">
+                    <div class="pdf-header">
+                        <img src="${urlLogoEmpresa}" class="pdf-logo" alt="Logo">
+                        <div class="pdf-title-box">
+                            <h2 class="pdf-title">CONTROLE INTERNO</h2>
+                            <span class="pdf-via-name">2. VIA CAIXA</span>
+                        </div>
+                    </div>
+                    <div class="pdf-info-grid">
+                        <div>
+                            <span><strong>Nº O.S.:</strong> ${osNumero}</span>
+                            <span><strong>Data:</strong> ${dataAtual}</span>
+                        </div>
+                        <div>
+                            <span><strong>Cliente:</strong> ${nomeCliente}</span>
+                            <span><strong>CPF:</strong> ${cpfCliente}</span>
+                        </div>
+                        <div>
+                            <span><strong>Contato:</strong> ${telCliente}</span>
+                            <span><strong>Colab.:</strong> ${vendedor}</span>
+                        </div>
+                    </div>
+                    <table class="pdf-table">
+                        <tr><th class="center" style="width:10%;">QTD</th><th>DESCRIÇÃO DO PRODUTO</th><th class="right" style="width:20%;">V. UNIT</th><th class="right" style="width:20%;">TOTAL</th></tr>
+                        ${linhasProdutosHTML}
+                    </table>
+                    
+                    <div class="pdf-totals-inline">
+                        <span>F. PGTO: ${formaPgto}</span>
+                        <span>TOTAL COMPRA: ${totalBaseTexto}</span>
+                        <span style="color:green;">ENTRADA: ${entradaTexto}</span>
+                        <span style="color:#d32f2f;">SALDO: ${saldoTexto} ${textParcelaExtra}</span>
+                    </div>
+
+                    <div class="pdf-termo">
+                        <strong>CONFERÊNCIA (Na Entrega):</strong>
+                        <span>(&nbsp;&nbsp;&nbsp;) Óculos em perfeito estado</span>
+                        <span>(&nbsp;&nbsp;&nbsp;) Receita original devolvida</span>
+                        <span>(&nbsp;&nbsp;&nbsp;) Teste de visão</span>
+                    </div>
+
+                    <div class="pdf-signatures">
+                        <div class="pdf-sign-line">Assinatura do Cliente</div>
+                        <div class="pdf-sign-line">Assinatura do Responsável (Caixa)</div>
+                    </div>
+                </div>
+
+                <div class="pdf-via" style="margin-bottom: 0; border-bottom: none;">
+                    <div class="pdf-header">
+                        <img src="${urlLogoEmpresa}" class="pdf-logo" alt="Logo">
+                        <div class="pdf-title-box">
+                            <h2 class="pdf-title">COMPROVANTE DA COMPRA</h2>
+                            <span class="pdf-via-name" style="background:#198754;">3. VIA DO CLIENTE</span>
+                        </div>
+                    </div>
+                    <div class="pdf-info-grid">
+                        <div>
+                            <span><strong>Nº O.S.:</strong> ${osNumero}</span>
+                            <span><strong>Data:</strong> ${dataAtual}</span>
+                        </div>
+                        <div>
+                            <span><strong>Cliente:</strong> ${nomeCliente}</span>
+                            <span><strong>Colab.:</strong> ${vendedor}</span>
+                        </div>
+                        <div>
+                            <span><strong>Previsão de Retirada:</strong></span>
+                            <span style="font-size:12px; color:red; font-weight:bold;">${dataRetiradaFormatada}</span>
+                        </div>
+                    </div>
+                    <table class="pdf-table">
+                        <tr><th class="center" style="width:10%;">QTD</th><th>DESCRIÇÃO DO PRODUTO</th><th class="right" style="width:20%;">TOTAL</th></tr>
+                        ${carrinho.map(item => `<tr><td class="center">${item.qtd}</td><td>${item.nome}</td><td class="right">R$ ${(item.valor * item.qtd).toFixed(2)}</td></tr>`).join('')}
+                    </table>
+                    
+                    <div class="pdf-totals-inline">
+                        <span>TOTAL COMPRA: ${totalBaseTexto}</span>
+                        <span style="color:green;">SINAL PAGO: ${entradaTexto}</span>
+                        <span style="color:#d32f2f;">SALDO RESTANTE: ${saldoTexto} ${textParcelaExtra}</span>
+                    </div>
+
+                    <div class="pdf-footer-msg">
+                        Muito obrigado pela preferência! É obrigatória a apresentação deste comprovante para a retirada dos óculos.
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async function enviarPedidoParaERP(dadosEnvio) {
+        const url = `${getErpBaseUrl().replace(/\/$/, '')}/integracoes/tablet/pedido-agrupado`;
+        const itensERP = (dadosEnvio.itens || []).map(item => ({
+            produtoId: item.produtoId || item.idProduto || null,
+            descricao: item.descricao || item.nome || item.produto || item.nomeProduto || 'Item do tablet',
+            quantidade: Number(item.quantidade || item.qtd || item.qtde || 1),
+            valorUnitario: Number(item.valorUnitario || item.valor || item.preco || item.precoVenda || 0),
+            desconto: Number(item.desconto || 0)
+        }));
+
+        const payload = {
+            token: getErpToken(),
+            lojaCodigo: getLojaCodigoAtual(),
+            vendedorEmail: getConsultorEmailAtual(),
+            cliente: {
+                nome: dadosEnvio.nomeCliente || document.getElementById('nome').value || 'Cliente não informado',
+                whatsapp: dadosEnvio.telefone || document.getElementById('tel1').value || '',
+                cpf: dadosEnvio.cpf || document.getElementById('cpf').value || ''
+            },
+            itens: itensERP,
+            dados: {
+                idVendaTablet: dadosEnvio.idVenda,
+                formaPagamento: dadosEnvio.formaPagamento,
+                condicao: dadosEnvio.condicao,
+                parcelas: dadosEnvio.parcelas,
+                valorPago: dadosEnvio.valorPago,
+                saldoDevedor: dadosEnvio.saldoDevedor,
+                desconto: Number(String(dadosEnvio.desconto || '0').replace(',', '.')) || 0,
+                lojaCodigo: getLojaCodigoAtual()
+            },
+            observacoes: `Pedido enviado pelo tablet legado - ${dadosEnvio.idVenda}`
+        };
+
+        console.log('ENVIANDO PEDIDO PARA ERP:', payload);
+
+        const resposta = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await resposta.json().catch(() => ({}));
+        console.log('RESPOSTA ERP:', data);
+
+        if (!resposta.ok || !data.ok) {
+            throw new Error(data.message || data.error || 'ERP não confirmou o recebimento do pedido.');
+        }
+
+        return data;
+    }
+
+    // ========================================================
+    // PROCESSAMENTO DA VENDA E GERAÇÃO PDF BASE64
+    // ========================================================
+    async function processarOperacao(tipoOperacao) {
+        if(carrinho.length === 0) { alert("Adicione produtos ao carrinho antes de prosseguir!"); return; }
+        
+        const nomeParaSalvar = vendedorConfirmado || document.getElementById('vendedor').value;
+        if(!nomeParaSalvar) { alert("Erro: Nome do consultor perdido. Volte ao passo 1 e confira."); return; }
+
+        const btn = tipoOperacao === 'venda' ? document.getElementById('btnFinalVenda') : null;
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = "GERANDO PDF E SALVANDO... <i class='fas fa-spinner fa-spin ms-2'></i>";
+        }
+
+        const idPedidoUnico = "AMMO-" + Date.now().toString().slice(-6);
+        const condicao = document.querySelector('input[name="condicao"]:checked').value;
+        const entrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
+        const parcelasInt = parseInt(document.getElementById('qtdParcelas').value) || 1;
+        const saldoValor = parseFloat(document.getElementById('vSaldoDisplay').dataset.valor) || 0;
+
+        let condicaoEnvio = condicao;
+        let parcelasEnvio = "";
+
+        if (entrada > 0) {
+            condicaoEnvio = "Parcial (" + condicao + ")";
+            parcelasEnvio = `Entrada: R$ ${entrada.toFixed(2)} | Restante: ${(condicao === 'Parcelado' ? parcelasInt+'x' : 'À Vista')} (Saldo: R$ ${saldoValor.toFixed(2)})`;
+        } else {
+            parcelasEnvio = condicao === 'Parcelado' ? parcelasInt + "x" : "1x";
+        }
+        
+        let valorBaseDaCompra = parseFloat(document.getElementById('vTotalDisplay').dataset.valor) || 0;
+        let valorGeral = (condicao === 'Parcelado' && parcelasInt > 1) ? (entrada + saldoValor) : valorBaseDaCompra;
+        let saldoRealParaPlanilha = (condicao === 'A Vista' && entrada === 0) ? valorBaseDaCompra : saldoValor;
+
+        const dadosEnvio = {
+            tipo: tipoOperacao, 
+            idVenda: idPedidoUnico,
+            vendedor: nomeParaSalvar,
+            nomeCliente: document.getElementById('nome').value || "Cliente não identificado",
+            cpf: document.getElementById('cpf').value,
+            telefone: document.getElementById('tel1').value,
+            endereco: document.getElementById('rua').value + ", " + document.getElementById('numero').value + " - " + document.getElementById('bairro').value,
+            itens: carrinho,
+            subtotal: document.getElementById('subtotal').value.replace('.', ','),
+            desconto: String(document.getElementById('vDesconto').value || 0).replace('.', ','),
+            acrescimo: String(document.getElementById('vAcrescimo').value || 0).replace('.', ','),
+            valorTotal: valorGeral.toFixed(2).replace('.', ','),
+            formaPagamento: document.getElementById('formaPgto').value,
+            condicao: condicaoEnvio,
+            parcelas: parcelasEnvio,
+            parcelasNum: parcelasInt,      
+            valorPago: entrada.toFixed(2).replace('.', ','),            
+            saldoDevedor: saldoRealParaPlanilha.toFixed(2).replace('.', ',')        
+        };
+
+        try {
+            // Monta o HTML invisível
+            montarHtmlImpressao(dadosEnvio);
+            const elementoImpressao = document.getElementById('areaImpressao');
+            elementoImpressao.style.display = 'block';
+
+            const opt = {
+                margin:       [2, 2, 2, 2], // Margem ajustada para o mínimo possível
+                filename:     `${idPedidoUnico}.pdf`,
+                image:        { type: 'jpeg', quality: 0.90 }, 
+                html2canvas:  { scale: 1.1, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Gera PDF em Base64
+            const pdfBase64 = await html2pdf().set(opt).from(elementoImpressao).output('datauristring');
+            elementoImpressao.style.display = 'none'; // Esconde de novo
+
+            // Salva no objeto pra mandar ao Google Sheets
+            dadosEnvio.arquivoPdfBase64 = pdfBase64;
+
+            const retornoERP = await enviarPedidoParaERP(dadosEnvio);
+            alert(`Pedido enviado ao ERP/Caixa: ${retornoERP.numero}`);
+            
+            // Exibe PDF na Tela
+            exibirPdfNaTela(pdfBase64, idPedidoUnico);
+            
+        } catch(e) {
+            alert("Erro na conexão ou na geração do PDF, tente novamente.");
+            if(btn) { 
+                btn.disabled = false; 
+                btn.innerHTML = "<i class='fas fa-check-circle me-2'></i> FINALIZAR VENDA"; 
+            }
+        }
+    }
+
+    // ========================================================
+    // ========================================================
+    // TELA DE SUCESSO E VISUALIZADOR DE PDF
+    // ========================================================
+    function exibirPdfNaTela(base64Str, idVenda) {
+        const appBody = document.getElementById('sistemaPDV');
+        appBody.innerHTML = `
+            <div class="container d-flex flex-column align-items-center justify-content-center h-100 p-4 w-100">
+                <h3 class="text-success fw-bold mb-2"><i class="fas fa-check-circle me-2"></i>Operação Finalizada!</h3>
+                <p class="text-muted mb-4">A venda foi registrada e o PDF salvo no banco de dados.</p>
+                
+                <div class="d-flex gap-3 mb-4">
+                    <button class="btn btn-outline-primary px-4 fw-bold" onclick="window.location.href='./menu1.html'">
+                        <i class="fas fa-home me-2"></i> Iniciar Nova Venda
+                    </button>
+                    <a href="${base64Str}" download="OS_${idVenda}.pdf" class="btn btn-warning px-4 fw-bold shadow-sm">
+                        <i class="fas fa-download me-2"></i> Baixar / Imprimir Agora
+                    </a>
+                </div>
+                
+                <div class="w-100 flex-grow-1 border rounded shadow-sm overflow-hidden" style="max-width: 900px; background: white;">
+                    <iframe src="${base64Str}" width="100%" height="100%" style="border:none;"></iframe>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Transições de form (SALVAR CLIENTE)
+    document.getElementById('formPDV').onsubmit = async (e) => {
+        e.preventDefault(); 
+        const sel = document.getElementById('vendedor');
+        if (sel.selectedIndex === -1 || sel.options[sel.selectedIndex].value === "") { 
+            alert("Por favor, selecione seu nome antes de continuar!"); return; 
+        }
+        vendedorConfirmado = sel.options[sel.selectedIndex].value;
+
+        const btn = document.getElementById('btnSalvarCliente'); 
+        btn.disabled = true; 
+        btn.innerHTML = "SALVANDO...";
+        
+        const dados = { 
+            tipo: 'cad_cliente', 
+            vendedor: vendedorConfirmado, 
+            nome: document.getElementById('nome').value, 
+            nascimento: document.getElementById('nascimento').value, 
+            cpf: document.getElementById('cpf').value, 
+            cep: document.getElementById('cep').value,
+            rua: document.getElementById('rua').value,
+            numero: document.getElementById('numero').value,
+            bairro: document.getElementById('bairro').value,
+            complemento: document.getElementById('complemento').value,
+            cidade: document.getElementById('cidade_uf').value,
+            sexo: document.querySelector('input[name="sexo"]:checked').value, 
+            email: document.getElementById('email').value, 
+            tel1: document.getElementById('tel1').value, 
+            tel2: document.getElementById('tel2').value, 
+            obs: document.getElementById('obs').value 
+        };
+        
+        try { 
+            console.log('Cliente mantido localmente no tablet:', dados);
+            navegarAbas('receita');
+            document.querySelectorAll('.nomeClienteDisplay').forEach(el => el.innerText = dados.nome); 
+        } catch(err) { } finally {
+            btn.disabled = false;
+            btn.innerHTML = "Avançar para Receita <i class='fas fa-arrow-right ms-2'></i>";
+        }
+    };
+
+    // (SALVAR RECEITA)
+    async function enviarReceita() {
+        const btn = document.getElementById('btnSalvarReceita'); 
+        btn.disabled = true; 
+        btn.innerHTML = "ENVIANDO...";
+        const dados = { 
+            tipo: 'receita', 
+            nomeCliente: document.getElementById('nome').value, 
+            medico: document.getElementById('medico').value, 
+            dataReceita: document.getElementById('dataReceita').value, 
+            lOdEsf: document.getElementById('lOdEsf').value, lOdCil: document.getElementById('lOdCil').value, lOdEixo: document.getElementById('lOdEixo').value, 
+            lOeEsf: document.getElementById('lOeEsf').value, lOeCil: document.getElementById('lOeCil').value, lOeEixo: document.getElementById('lOeEixo').value, 
+            adicao: document.getElementById('adicao').value, 
+            pOdEsf: document.getElementById('pOdEsf').value, pOdCil: document.getElementById('pOdCil').value, pOdEixo: document.getElementById('pOdEixo').value, 
+            pOeEsf: document.getElementById('pOeEsf').value, pOeCil: document.getElementById('pOeCil').value, pOeEixo: document.getElementById('pOeEixo').value, 
+            dnpOd: document.getElementById('dnpOd').value, dnpOe: document.getElementById('dnpOe').value, 
+            altOd: document.getElementById('altOd').value, altOe: document.getElementById('altOe').value,
+            armHorizontal: document.getElementById('armHorizontal').value,
+            armVertical: document.getElementById('armVertical').value,
+            armPonte: document.getElementById('armPonte').value,
+            armDiagonal: document.getElementById('armDiagonal').value,
+            armAlturaPupila: document.getElementById('armAlturaPupila').value,
+            armTipo: document.getElementById('armTipo').value,
+            armMarca: document.getElementById('armMarca').value,
+            armModelo: document.getElementById('armModelo').value,
+            armCor: document.getElementById('armCor').value
+        };
+        try { 
+            console.log('Receita mantida localmente no tablet:', dados);
+            navegarAbas('vendas');
+        } catch(err) { } finally {
+            btn.disabled = false;
+            btn.innerHTML = "Ir para Orçamento <i class='fas fa-arrow-right ms-2'></i>";
+        }
+    }
+
+    function calcularPerto() {
+        const adicaoStr = document.getElementById('adicao').value.replace(',', '.');
+        const adicao = parseFloat(adicaoStr);
+        if (!isNaN(adicao) && adicao > 0) {
+            const lOdEsf = parseFloat(document.getElementById('lOdEsf').value.replace(',', '.')) || 0; 
+            const lOeEsf = parseFloat(document.getElementById('lOeEsf').value.replace(',', '.')) || 0;
+            let resOd = lOdEsf + adicao; 
+            let resOe = lOeEsf + adicao;
+            document.getElementById('pOdEsf').value = (resOd > 0 ? "+" : "") + resOd.toFixed(2); 
+            document.getElementById('pOeEsf').value = (resOe > 0 ? "+" : "") + resOe.toFixed(2);
+            document.getElementById('pOdCil').value = document.getElementById('lOdCil').value; 
+            document.getElementById('pOdEixo').value = document.getElementById('lOdEixo').value;
+            document.getElementById('pOeCil').value = document.getElementById('lOeCil').value; 
+            document.getElementById('pOeEixo').value = document.getElementById('lOeEixo').value;
+        } else { 
+            ['pOdEsf', 'pOeEsf', 'pOdCil', 'pOdEixo', 'pOeCil', 'pOeEixo'].forEach(id => document.getElementById(id).value = "");
+        }
+    }
+
+    ['lOdEsf', 'lOeEsf', 'lOdCil', 'lOeCil', 'lOdEixo', 'lOeEixo', 'adicao'].forEach(id => { 
+        const input = document.getElementById(id);
+        if(input) { input.addEventListener('input', calcularPerto); input.addEventListener('keyup', calcularPerto); }
+    });
+</script>
+</body>
+</html>

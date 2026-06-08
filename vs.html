@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Óticas Ammo - Simulador Profissional (Visão Simples)</title>
+    <style>
+        :root {
+            --bg-menu-dark: rgba(15, 15, 15, 0.75);
+            --accent-blue: #007aff;
+            --white-bar: #ffffff; 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body { background-color: #050505; overflow: hidden; width: 100vw; height: 100vh; color: #fff; }
+
+        /* LOADING */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: var(--accent-blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* MOTOR VISUAL */
+        .simulator-stage { position: absolute; top: 0; left: 340px; right: 0; bottom: 55px; display: flex; justify-content: center; align-items: center; z-index: 1; }
+        .svg-engine { width: 100%; height: 100%; max-height: 90vh; }
+        
+        .lens-outline { fill: none; stroke: #888888; stroke-width: 7; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.7)); }
+        .corridor-line { display: none; } 
+        #full-bg-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; overflow: hidden; background: #111; }
+        #img-blurred-bg, #video-blurred-bg { width: 100%; height: 100%; object-fit: cover; filter: blur(5px) brightness(0.95); transition: object-position 0.3s; }
+        #video-blurred-bg { display: none; }
+
+        /* PAINEL LATERAL PREMIUM */
+        .left-panel { 
+            position: absolute; top: 0; left: 0; bottom: 55px; width: 340px; 
+            background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(25px); 
+            border-right: 1px solid rgba(255,255,255,0.05); display: flex; 
+            flex-direction: column; z-index: 10; box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+        }
+        
+        .panel-header { 
+            padding: 20px; background: rgba(0,0,0,0.3); 
+            border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;
+        }
+        .panel-header span {
+            background: linear-gradient(90deg, #007aff, #00d2ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-size: 14px; font-weight: 900; letter-spacing: 2px;
+        }
+
+        .lens-list { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        
+        .lens-list::-webkit-scrollbar { width: 6px; }
+        .lens-list::-webkit-scrollbar-track { background: transparent; }
+        .lens-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+        .lens-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+        .lens-item { 
+            background: rgba(255,255,255,0.03); border-radius: 14px; 
+            border: 1px solid rgba(255,255,255,0.08); cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .lens-item:hover { 
+            background: rgba(255,255,255,0.06); border-color: rgba(0, 122, 255, 0.4); 
+            transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .lens-header { padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+        .lens-icon { font-size: 16px; opacity: 0.7; }
+        .lens-name { font-size: 13px; font-weight: 700; color: #e2e8f0; transition: 0.3s; }
+        .lens-price { font-size: 14px; font-weight: 800; color: #fff; transition: 0.3s; }
+        .lens-arrow { font-size: 10px; color: #94a3b8; transition: transform 0.4s ease; opacity: 0.5; }
+
+        .lens-item.selected { 
+            background: linear-gradient(145deg, #ffffff, #f8fafc); 
+            border-color: #007aff; box-shadow: 0 8px 30px rgba(0, 122, 255, 0.2); 
+            transform: translateY(-2px);
+        }
+        .lens-item.selected .lens-name { color: #0f172a; font-weight: 800; }
+        .lens-item.selected .lens-price { color: #059669; }
+        .lens-item.selected .lens-arrow { color: #007aff; opacity: 1; transform: rotate(180deg); }
+        .lens-item.selected .lens-icon { filter: drop-shadow(0 2px 4px rgba(0,122,255,0.4)); opacity: 1; }
+
+        .lens-options { 
+            max-height: 0; opacity: 0; overflow: hidden; 
+            background: #ffffff; transition: max-height 0.4s ease, opacity 0.3s ease; 
+        }
+        .lens-item.expanded .lens-options { max-height: 500px; opacity: 1; padding-bottom: 15px; border-top: 1px dashed #e2e8f0; }
+        
+        .option-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; }
+        .opt-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .opt-select { 
+            background: #f1f5f9; color: #007aff; font-size: 12px; font-weight: 800; 
+            text-align: right; outline: none; direction: rtl; cursor: pointer; 
+            padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; 
+            transition: all 0.2s; min-width: 120px; appearance: none;
+        }
+        .opt-select:hover { background: #e2e8f0; border-color: #94a3b8; }
+        .opt-select:focus { border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+
+        .btn-lancar-os { 
+            background: linear-gradient(135deg, #007aff, #005bb5); color: #fff; 
+            border: none; padding: 12px; font-size: 12px; font-weight: 800; 
+            border-radius: 8px; margin: 10px auto 5px; width: calc(100% - 36px); 
+            display: block; cursor: pointer; transition: all 0.2s; 
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-lancar-os:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4); }
+        .btn-lancar-os:active { transform: translateY(1px); }
+
+        /* UI E BOTOES SUPERIORES */
+        .top-menu { position: absolute; top: 20px; left: 360px; display: flex; background: var(--bg-menu-dark); backdrop-filter: blur(10px); border-radius: 8px; z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
+        .top-btn { padding: 10px 18px; color: #fff; font-size: 12px; border-right: 1px solid rgba(255,255,255,0.1); font-weight: 600; cursor: pointer; }
+        
+        .env-selector { background: transparent; color: #fff; border: none; outline: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .env-selector option { background-color: #1a1a1a; color: #ffffff; }
+
+        .right-menu { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; background: var(--bg-menu-dark); backdrop-filter: blur(10px); border-radius: 10px; z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
+        .right-btn { padding: 16px 10px; color: #fff; font-size: 10px; text-align: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .right-btn.active-green { background: #28a745; border-radius: 0 0 10px 10px; font-weight: bold; }
+
+        /* RODAPÉ COMPACTO (55px) */
+        .bottom-bar { 
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 55px; 
+            background: #ffffff; box-shadow: 0 -5px 25px rgba(0,0,0,0.08); 
+            display: flex; justify-content: space-between; align-items: center; 
+            z-index: 20; padding: 0 15px; 
+        }
+        .bottom-tools { display: flex; height: 100%; align-items: center; gap: 5px; }
+        
+        .tool-btn { 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 45px; min-width: 70px; color: #64748b; font-size: 9px; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; 
+            cursor: pointer; transition: all 0.2s ease; background: transparent; 
+        }
+        .tool-btn span { 
+            font-size: 18px; margin-bottom: 2px; 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .tool-btn:hover { background: #f1f5f9; color: var(--accent-blue); }
+        .tool-btn:hover span { transform: translateY(-3px) scale(1.1); }
+        .tool-btn:active { transform: scale(0.95); }
+        .btn-menu { color: var(--accent-blue); }
+
+        .cart-area { display: flex; align-items: center; gap: 12px; padding-right: 5px; }
+        .cart-product-name { font-size: 12px; color: #475569; font-weight: 700; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+        .cart-price { 
+            background: linear-gradient(135deg, #10b981, #059669); color: #fff; 
+            padding: 8px 20px; border-radius: 30px; font-weight: 800; font-size: 15px; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); text-align: center; 
+            min-width: 120px; transition: transform 0.2s; cursor: default; 
+        }
+        .cart-price:hover { transform: scale(1.03); }
+
+        /* POPUPS */
+        .valor-popup, .calc-popup { 
+            position: absolute; bottom: 70px; background: #ffffff; 
+            display: none; padding: 18px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
+            border-radius: 14px; border: 1px solid #e2e8f0; z-index: 15; 
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+            opacity: 0; transform: translateY(20px); 
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        .valor-popup { left: 20px; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 380px; }
+        .valor-popup.show, .calc-popup.show { display: flex; }
+        .vp-label { 
+            display: flex; align-items: center; gap: 6px; font-size: 12px; 
+            color: #475569; cursor: pointer; font-weight: 700; padding: 8px 12px; 
+            background: #f8fafc; border-radius: 8px; transition: 0.2s; border: 1px solid #f1f5f9; 
+        }
+        .vp-label:hover { background: #e2e8f0; border-color: #cbd5e1; }
+        
+        .calc-popup { right: 20px; flex-direction: column; width: 290px; padding: 20px; }
+        #calc-display { 
+            width: 100%; height: 50px; text-align: right; font-size: 24px; 
+            margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 10px; 
+            padding: 5px 12px; background: #f8fafc; color: #0f172a; font-weight: 800; 
+            outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.03); 
+        }
+        .calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .calc-keys button { 
+            height: 48px; cursor: pointer; border: none; border-radius: 10px; 
+            font-size: 20px; font-weight: 800; color: #334155; background: #f1f5f9; 
+            box-shadow: 0 4px 0 #cbd5e1; transition: all 0.1s; 
+        }
+        .calc-keys button:hover { background: #e2e8f0; transform: translateY(2px); box-shadow: 0 2px 0 #cbd5e1; }
+        .calc-keys button:active { transform: translateY(4px); box-shadow: none; }
+        .calc-keys button:nth-child(4n) { background: #eff6ff; color: #2563eb; box-shadow: 0 4px 0 #bfdbfe; }
+        .calc-keys button:nth-child(4n):hover { background: #dbeafe; transform: translateY(2px); box-shadow: 0 2px 0 #bfdbfe; }
+        .calc-keys button:nth-child(4n):active { transform: translateY(4px); box-shadow: none; }
+        .calc-btn-clear { background: #fef2f2 !important; color: #dc2626 !important; box-shadow: 0 4px 0 #fecaca !important; }
+        .calc-btn-clear:hover { background: #fee2e2 !important; box-shadow: 0 2px 0 #fecaca !important; }
+        .calc-btn-clear:active { transform: translateY(4px); box-shadow: none !important; }
+        .calc-btn-equal { background: #22c55e !important; color: #fff !important; box-shadow: 0 4px 0 #16a34a !important; }
+        .calc-btn-equal:hover { background: #16a34a !important; box-shadow: 0 2px 0 #15803d !important; }
+        .calc-btn-equal:active { transform: translateY(4px); box-shadow: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen"><div class="spinner"></div><div style="font-size: 12px; color: #888;">CARREGANDO...</div></div>
+
+    <div id="full-bg-container">
+        <img id="img-blurred-bg" src="https://i.postimg.cc/fbG2xZ6X/Whats-App-Image-2026-05-03-at-21-43-30-(1).jpg">
+        <video id="video-blurred-bg" autoplay playsinline muted></video>
+    </div>
+
+    <div class="simulator-stage">
+        <svg class="svg-engine" viewBox="0 0 1000 660">
+            <defs>
+                <clipPath id="lens-outline-clip"><path d="M120 120 C 300 60, 700 60, 880 120 C 980 270, 900 520, 750 580 C 600 620, 400 620, 250 580 C 100 520, 20 270, 120 120 Z" /></clipPath>
+                <clipPath id="circle-clip"><circle cx="500" cy="340" r="280" /></clipPath>
+            </defs>
+            
+            <g clip-path="url(#lens-outline-clip)">
+                <g id="dynamic-clip-group">
+                    <image id="img-sharp" href="https://i.postimg.cc/fbG2xZ6X/Whats-App-Image-2026-05-03-at-21-43-30-(1).jpg" x="0" y="0" width="1000" height="660" preserveAspectRatio="xMidYMid slice" style="transition: all 0.3s;" />
+                    <foreignObject id="fo-video" x="0" y="0" width="1000" height="660" style="display: none;"><video id="video-sharp" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video></foreignObject>
+                </g>
+            </g>
+
+            <g id="sv-group" style="display: none; pointer-events: none;" clip-path="url(#lens-outline-clip)">
+                <circle cx="500" cy="340" r="280" fill="transparent" stroke="#007aff" stroke-width="3" stroke-dasharray="10, 8" />
+                <path d="M480 340 H520 M500 320 V360" stroke="#007aff" stroke-width="3" />
+            </g>
+
+            <path d="M120 120 C 300 60, 700 60, 880 120 C 980 270, 900 520, 750 580 C 600 620, 400 620, 250 580 C 100 520, 20 270, 120 120 Z" class="lens-outline" />
+        </svg>
+    </div>
+
+    <!-- PAINEL LATERAL PREMIUM -->
+    <div class="left-panel">
+        <div class="panel-header"><span>LINHA VS AMMO AI</span></div>
+        <div class="lens-list" id="lens-container"></div>
+    </div>
+
+    <div class="top-menu">
+        <div class="top-btn">▦ Tabela</div>
+        <div class="top-btn">🖼️ <select class="env-selector" id="env-select" onchange="changeBg(this.value)"><option value="0">Escritório</option><option value="1">Carro</option><option value="2">Olho</option><option value="3">Livro</option><option value="4">PC</option><option value="5">Montanha</option></select></div>
+    </div>
+
+    <div class="right-menu"><div class="right-btn">📝 Desc</div><div class="right-btn">ℹ️ Info</div><div class="right-btn active-green" id="btn-cam" onclick="toggleCamera()">👓 Simu</div></div>
+
+    <div class="bottom-bar">
+        <div class="bottom-tools">
+            <div class="tool-btn btn-menu" onclick="window.location.href='./menu1.html'"><span>☰</span>Menu</div>
+            <div class="tool-btn"><span>👓</span>Extras</div>
+            <div class="tool-btn" onclick="window.open('cadastronovo.html', '_blank')"><span>📄</span>OS</div>
+            <div class="tool-btn" id="btn-valor" onclick="toggleValorPopup()"><span>💲</span>Valor</div>
+            <div class="tool-btn" id="btn-calc" onclick="toggleCalcPopup()"><span>🖩</span>Cálculo</div>
+        </div>
+        <div class="cart-area">
+            <span class="cart-product-name" id="cart-name">Selecione uma lente</span>
+            <span class="cart-price" id="cart-price">R$ 0,00</span>
+        </div>
+        
+        <div class="valor-popup" id="valor-popup">
+            <label class="vp-label"><input type="checkbox" id="chk-mostrar" checked onchange="updateFinanceSystem()"> Mostrar Valores</label>
+            <label class="vp-label"><input type="radio" name="paymethod" value="vista" onchange="updateFinanceSystem()"> à vista</label>
+            <label class="vp-label"><input type="radio" name="paymethod" value="debito" onchange="updateFinanceSystem()"> débito</label>
+            <label class="vp-label"><input type="radio" name="paymethod" value="prazo" checked onchange="updateFinanceSystem()"> à prazo</label>
+        </div>
+
+        <div class="calc-popup" id="calc-popup">
+            <input type="text" id="calc-display" disabled value="0">
+            <div class="calc-keys">
+                <button onclick="calcInput('7')">7</button><button onclick="calcInput('8')">8</button><button onclick="calcInput('9')">9</button><button onclick="calcInput('/')">÷</button>
+                <button onclick="calcInput('4')">4</button><button onclick="calcInput('5')">5</button><button onclick="calcInput('6')">6</button><button onclick="calcInput('*')">×</button>
+                <button onclick="calcInput('1')">1</button><button onclick="calcInput('2')">2</button><button onclick="calcInput('3')">3</button><button onclick="calcInput('-')">-</button>
+                <button class="calc-btn-clear" onclick="calcClear()">C</button><button onclick="calcInput('0')">0</button><button class="calc-btn-equal" onclick="calcEval()">=</button><button onclick="calcInput('+')">+</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const url_api_sheets = ''; // Apps Script removido 
+
+        let lensDatabase = {};
+        let currentLensModel = "";
+        let activeLensItem = null;
+
+        const modelosExatos = ["VISÃO SIMPLES PRONTAS", "VISÃO SIMPLES AMMO JAZZ", "VS VISTA CANSADA"];
+
+        async function loadDataFromSheets() {
+            // Tabela via Google Apps Script removida. Base local mínima.
+            lensDatabase = {};
+            document.getElementById('loading-screen').style.display = 'none';
+            modelosExatos.forEach(modelo => {
+                if (!lensDatabase[modelo]) {
+                    lensDatabase[modelo] = { tratamentos: { "Padrão": { "1.50": 0 } } };
+                }
+            });
+            renderMenuLentes();
+        }
+
+        function renderMenuLentes() {
+            const container = document.getElementById('lens-container');
+            container.innerHTML = ""; 
+
+            modelosExatos.forEach((modelName) => {
+                const tratamentos = lensDatabase[modelName].tratamentos;
+                const firstTreatment = Object.keys(tratamentos)[0];
+                const firstMaterial = Object.keys(tratamentos[firstTreatment])[0];
+                const basePrice = tratamentos[firstTreatment][firstMaterial];
+                
+                const div = document.createElement('div');
+                div.className = 'lens-item';
+                div.setAttribute('data-baseprice', basePrice); 
+                
+                div.innerHTML = `
+                    <div class="lens-header" onclick="handleLensClick(this.parentElement, '${modelName}')">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="lens-icon">👓</div>
+                            <div class="lens-name">${modelName}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="lens-price"></div>
+                            <div class="lens-arrow">▼</div>
+                        </div>
+                    </div>
+                    <div class="lens-options" onclick="event.stopPropagation()">
+                        <div class="option-row"><span class="opt-label">Superfície</span><select class="opt-select js-opt-surface" onchange="calculateCart()"><option value="0" data-name="Digital">Digital</option><option value="2400" data-name="Freeform">Freeform</option></select></div>
+                        <div class="option-row"><span class="opt-label">Fotosensível</span><select class="opt-select js-opt-photosensitive" onchange="calculateCart()"><option value="0" data-name="Incolor">Não</option><option value="3600" data-name="Sim">Sim</option></select></div>
+                        <div class="option-row"><span class="opt-label">Material</span><select class="opt-select js-opt-material" onchange="calculateCart()"></select></div>
+                        <div class="option-row"><span class="opt-label">Tratamento</span><select class="opt-select js-opt-treatment" onchange="updateMaterials(this)"></select></div>
+                        <button class="btn-lancar-os" onclick="lancarItemNaOS()">Lançar na OS</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            updateFinanceSystem(); 
+        }
+
+        function applyLensVisuals(modelName) {
+            const svGroup = document.getElementById('sv-group');
+            const dynamicClipGroup = document.getElementById('dynamic-clip-group');
+
+            if (modelName === "VISÃO SIMPLES PRONTAS") {
+                svGroup.style.display = 'block'; 
+                dynamicClipGroup.setAttribute('clip-path', 'url(#circle-clip)'); 
+            } else {
+                svGroup.style.display = 'none'; 
+                dynamicClipGroup.removeAttribute('clip-path'); 
+            }
+        }
+
+        function handleLensClick(itemElement, modelName) {
+            if (itemElement.classList.contains('selected') && itemElement.classList.contains('expanded')) {
+                itemElement.classList.remove('expanded'); 
+                itemElement.classList.remove('selected'); 
+                applyLensVisuals(""); 
+                document.getElementById('cart-name').innerText = "Selecione uma lente";
+                document.getElementById('cart-price').innerText = formatPriceStr(0);
+                activeLensItem = null;
+                return;
+            }
+
+            document.querySelectorAll('.lens-item').forEach(i => { i.classList.remove('selected'); i.classList.remove('expanded'); });
+            itemElement.classList.add('selected');
+            itemElement.classList.add('expanded');
+            
+            activeLensItem = itemElement; 
+            currentLensModel = modelName;
+
+            applyLensVisuals(modelName);
+
+            const treatmentSelect = itemElement.querySelector('.js-opt-treatment');
+            if (treatmentSelect.options.length === 0) {
+                Object.keys(lensDatabase[modelName].tratamentos).forEach(t => {
+                    const opt = document.createElement('option'); opt.value = t; opt.innerText = t; treatmentSelect.appendChild(opt);
+                });
+                updateMaterials(treatmentSelect);
+            } else { calculateCart(); }
+        }
+
+        function updateMaterials(treatmentSelect) {
+            const itemElement = treatmentSelect.closest('.lens-item');
+            const materialSelect = itemElement.querySelector('.js-opt-material');
+            
+            materialSelect.innerHTML = "";
+            
+            const materiaisParaEsteTratamento = lensDatabase[currentLensModel].tratamentos[treatmentSelect.value];
+            
+            if (materiaisParaEsteTratamento) {
+                Object.keys(materiaisParaEsteTratamento).forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = materiaisParaEsteTratamento[m];
+                    opt.innerText = m;
+                    opt.setAttribute('data-name', m);
+                    materialSelect.appendChild(opt);
+                });
+            }
+            calculateCart();
+        }
+
+        function calculateCart() {
+            if (!activeLensItem) return;
+            
+            const matSelect = activeLensItem.querySelector('.js-opt-material');
+            const surfaceVal = parseFloat(activeLensItem.querySelector('.js-opt-surface').value) || 0;
+            const photoVal = parseFloat(activeLensItem.querySelector('.js-opt-photosensitive').value) || 0;
+            
+            const basePrice = parseFloat(matSelect.value) || 0;
+            const total = basePrice + surfaceVal + photoVal;
+            
+            activeLensItem.setAttribute('data-baseprice', total);
+            
+            const materialNome = matSelect.options[matSelect.selectedIndex]?.getAttribute('data-name') || "";
+            document.getElementById('cart-name').innerText = `${currentLensModel} - ${materialNome}`;
+            
+            updateFinanceSystem();
+        }
+
+        function toggleValorPopup() { 
+            const valorPopup = document.getElementById('valor-popup');
+            const calcPopup = document.getElementById('calc-popup');
+            if(valorPopup.classList.contains('show')) {
+                valorPopup.classList.remove('show');
+            } else {
+                valorPopup.classList.add('show');
+                calcPopup.classList.remove('show');
+            }
+        }
+        
+        function toggleCalcPopup() { 
+            const calcPopup = document.getElementById('calc-popup');
+            const valorPopup = document.getElementById('valor-popup');
+            if(calcPopup.classList.contains('show')) {
+                calcPopup.classList.remove('show');
+            } else {
+                calcPopup.classList.add('show');
+                valorPopup.classList.remove('show');
+            }
+        }
+
+        function formatPriceStr(totalBruto) {
+            if (!document.getElementById('chk-mostrar').checked) return "---"; 
+            const payMethod = document.querySelector('input[name="paymethod"]:checked').value;
+            if (payMethod === 'vista') return `R$ ${(totalBruto * 0.9).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            if (payMethod === 'debito') return `R$ ${totalBruto.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            return `12x R$ ${(totalBruto / 12).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        }
+
+        function updateFinanceSystem() {
+            document.querySelectorAll('.lens-item').forEach(item => {
+                item.querySelector('.lens-price').innerText = formatPriceStr(parseFloat(item.getAttribute('data-baseprice')));
+            });
+            const finalPrice = activeLensItem ? parseFloat(activeLensItem.getAttribute('data-baseprice')) : 0;
+            document.getElementById('cart-price').innerText = formatPriceStr(finalPrice);
+        }
+
+        function changeBg(idx) {
+            const ambientes = [
+                'https://i.postimg.cc/fbG2xZ6X/Whats-App-Image-2026-05-03-at-21-43-30-(1).jpg', 
+                'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1600&auto=format&fit=crop', 
+                'https://i.postimg.cc/FRFmXyHg/Whats-App-Image-2026-05-03-at-21-28-21.jpg', 
+                'https://i.postimg.cc/1zkCpPLq/Whats-App-Image-2026-05-03-at-21-42-43.jpg', 
+                'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?q=80&w=1400&auto=format&fit=crop', 
+                'https://images.unsplash.com/photo-1522163182402-834f871fd851?q=80&w=1400&auto=format&fit=crop' 
+            ];
+            
+            const imgBlur = document.getElementById('img-blurred-bg');
+            const imgSharp = document.getElementById('img-sharp');
+            
+            imgBlur.src = ambientes[idx]; 
+            imgSharp.setAttribute('href', ambientes[idx]);
+
+            if (idx == 2) {
+                imgBlur.style.objectPosition = "center 25%"; 
+                imgSharp.setAttribute('preserveAspectRatio', 'xMidYTop slice');
+            } else {
+                imgBlur.style.objectPosition = "center center";
+                imgSharp.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+            }
+        }
+
+        let camStream = null;
+        async function toggleCamera() {
+            const btn = document.getElementById('btn-cam');
+            if (!camStream) {
+                try {
+                    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    document.getElementById('video-blurred-bg').srcObject = document.getElementById('video-sharp').srcObject = camStream;
+                    document.getElementById('img-blurred-bg').style.display = document.getElementById('img-sharp').style.display = 'none';
+                    document.getElementById('video-blurred-bg').style.display = document.getElementById('fo-video').style.display = 'block';
+                    btn.innerHTML = '🛑 Parar'; btn.style.background = '#dc3545';
+                } catch (err) { alert("Erro na câmera."); }
+            } else {
+                camStream.getTracks().forEach(t => t.stop()); camStream = null;
+                document.getElementById('img-blurred-bg').style.display = document.getElementById('img-sharp').style.display = 'block';
+                document.getElementById('video-blurred-bg').style.display = document.getElementById('fo-video').style.display = 'none';
+                btn.innerHTML = '👓 Simu'; btn.style.background = '#28a745';
+            }
+        }
+
+        let calcStr = "0";
+        function calcInput(v) { if (calcStr === "0") calcStr = v; else calcStr += v; document.getElementById('calc-display').value = calcStr; }
+        function calcClear() { calcStr = "0"; document.getElementById('calc-display').value = calcStr; }
+        function calcEval() { try { calcStr = String(eval(calcStr)); document.getElementById('calc-display').value = calcStr; } catch(e) { calcStr = "0"; } }
+
+        function lancarItemNaOS() {
+            if (!activeLensItem) return;
+            const item = { 
+                modelo: currentLensModel, 
+                material: activeLensItem.querySelector('.js-opt-material').options[activeLensItem.querySelector('.js-opt-material').selectedIndex].getAttribute('data-name'),
+                tratamento: activeLensItem.querySelector('.js-opt-treatment').value,
+                preco: activeLensItem.getAttribute('data-baseprice') 
+            };
+            localStorage.setItem('itensoroticas', JSON.stringify(item));
+            alert('Lançado no carrinho!');
+        }
+
+        window.onload = loadDataFromSheets;
+    </script>
+</body>
+</html>
