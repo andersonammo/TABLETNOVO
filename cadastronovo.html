@@ -1154,11 +1154,82 @@
         }
     });
 
-    document.getElementById('cpf').addEventListener('blur', async function() {
-        // Consulta automática por CPF removida junto com o Google Apps Script.
-        // O cadastro continua manual e o pedido final é enviado ao AMMO ERP.
-        return;
-    });
+    function somenteNumerosAmmo(valor) {
+        return String(valor || '').replace(/\D/g, '');
+    }
+
+    function primeiroValorAmmo(...valores) {
+        return valores.find(v => v !== null && v !== undefined && String(v).trim() !== '') || '';
+    }
+
+    function formatarDataInputAmmo(valor) {
+        if (!valor) return '';
+        const texto = String(valor);
+        if (/^\d{4}-\d{2}-\d{2}/.test(texto)) return texto.slice(0, 10);
+        const data = new Date(texto);
+        if (Number.isNaN(data.getTime())) return '';
+        return data.toISOString().slice(0, 10);
+    }
+
+    function preencherClienteEncontradoAmmo(cliente) {
+        if (!cliente) return;
+
+        document.getElementById('nome').value = primeiroValorAmmo(cliente.nome, cliente.nomeCliente);
+        document.getElementById('nascimento').value = formatarDataInputAmmo(primeiroValorAmmo(cliente.dataNascimento, cliente.nascimento));
+        document.getElementById('email').value = primeiroValorAmmo(cliente.email);
+        document.getElementById('tel1').value = primeiroValorAmmo(cliente.whatsapp, cliente.telefone, cliente.tel1, cliente.celular);
+        document.getElementById('tel2').value = primeiroValorAmmo(cliente.telefoneSecundario, cliente.tel2);
+        document.getElementById('cep').value = primeiroValorAmmo(cliente.cep);
+        document.getElementById('rua').value = primeiroValorAmmo(cliente.rua, cliente.endereco);
+        document.getElementById('bairro').value = primeiroValorAmmo(cliente.bairro);
+        document.getElementById('cidade_uf').value = [cliente.cidade, cliente.estado].filter(Boolean).join(' - ') || primeiroValorAmmo(cliente.cidadeUf);
+        document.getElementById('obs').value = primeiroValorAmmo(cliente.observacoes, cliente.obs);
+
+        if (cliente.sexo) {
+            const sexo = String(cliente.sexo).toUpperCase().charAt(0);
+            const radio = document.querySelector(`input[name="sexo"][value="${sexo}"]`);
+            if (radio) radio.checked = true;
+        }
+    }
+
+    async function buscarClientePorCpfERP() {
+        const campoCpf = document.getElementById('cpf');
+        const cpf = somenteNumerosAmmo(campoCpf.value);
+
+        if (cpf.length !== 11) return;
+
+        campoCpf.classList.add('loading-cpf');
+
+        try {
+            const lojaCodigo = getLojaCodigoAtual();
+            const url = `${getErpBaseUrl().replace(/\/$/, '')}/integracoes/tablet/clientes?lojaCodigo=${encodeURIComponent(lojaCodigo)}&token=${encodeURIComponent(getErpToken())}&q=${encodeURIComponent(cpf)}`;
+            const resposta = await fetch(url, { cache: 'no-store' });
+            const data = await resposta.json().catch(() => []);
+
+            if (!resposta.ok) {
+                throw new Error(data.message || data.error || 'Erro ao buscar cliente no ERP.');
+            }
+
+            const clientes = Array.isArray(data) ? data : [];
+            const cliente = clientes.find(c => somenteNumerosAmmo(c.cpf) === cpf) || clientes[0];
+
+            if (cliente) {
+                preencherClienteEncontradoAmmo(cliente);
+                alert('Cliente já cadastrado no ERP. Dados carregados automaticamente.');
+                document.getElementById('nome').focus();
+            } else {
+                console.log('CPF não encontrado no ERP. Seguir cadastro novo.');
+            }
+        } catch (erro) {
+            console.error('Erro ao buscar CPF no ERP:', erro);
+            alert('Não foi possível consultar o CPF no ERP agora. Você pode continuar o cadastro manualmente.');
+        } finally {
+            campoCpf.classList.remove('loading-cpf');
+        }
+    }
+
+    document.getElementById('cpf').addEventListener('blur', buscarClientePorCpfERP);
+
 
     function travarDioptria(elemento, isCilindro, isAdicao = false) {
         if (!elemento.value) { calcularPerto(); return; } 
