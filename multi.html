@@ -261,7 +261,7 @@
     </div>
 
     <script>
-        const url_api_sheets = ''; // Apps Script removido 
+        const url_api_sheets = 'https://script.google.com/macros/s/AKfycbzbtC3k2RtCPxBQYOHbHTuftEniumTHIdUTfAbWuarYO3-QGYVLuwE8-fHKPhvcPRVm/exec'; 
 
         let lensDatabase = {};
         let currentLensModel = "";
@@ -275,16 +275,12 @@
         };
         
         async function loadDataFromSheets() {
-            // Tabela de lentes via Google Apps Script removida.
-            // Mantém tela operacional com base local mínima para escolher/lancar no carrinho.
-            lensDatabase = {
-                "Ammo One": { tratamentos: { "Padrão": { "1.50": 0 } } },
-                "Ammo Start D+": { tratamentos: { "Padrão": { "1.50": 0 } } },
-                "Ammo Like": { tratamentos: { "Padrão": { "1.50": 0 } } },
-                "Ammo Select": { tratamentos: { "Padrão": { "1.50": 0 } } }
-            };
-            document.getElementById('loading-screen').style.display = 'none';
-            renderMenuLentes();
+            try {
+                const response = await fetch(url_api_sheets);
+                lensDatabase = await response.json();
+                document.getElementById('loading-screen').style.display = 'none';
+                renderMenuLentes(); 
+            } catch (error) { document.getElementById('loading-screen').innerHTML = "Erro ao carregar planilha."; }
         }
 
         function filtrarMarca(marcaId, nomeExibicao) {
