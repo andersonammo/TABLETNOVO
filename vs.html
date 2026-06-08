@@ -280,7 +280,7 @@
     </div>
 
     <script>
-        const url_api_sheets = ''; // Apps Script removido 
+        const url_api_sheets = 'https://script.google.com/macros/s/AKfycbzbtC3k2RtCPxBQYOHbHTuftEniumTHIdUTfAbWuarYO3-QGYVLuwE8-fHKPhvcPRVm/exec'; 
 
         let lensDatabase = {};
         let currentLensModel = "";
@@ -289,15 +289,23 @@
         const modelosExatos = ["VISÃO SIMPLES PRONTAS", "VISÃO SIMPLES AMMO JAZZ", "VS VISTA CANSADA"];
 
         async function loadDataFromSheets() {
-            // Tabela via Google Apps Script removida. Base local mínima.
-            lensDatabase = {};
-            document.getElementById('loading-screen').style.display = 'none';
-            modelosExatos.forEach(modelo => {
-                if (!lensDatabase[modelo]) {
-                    lensDatabase[modelo] = { tratamentos: { "Padrão": { "1.50": 0 } } };
-                }
-            });
-            renderMenuLentes();
+            try {
+                const response = await fetch(url_api_sheets);
+                lensDatabase = await response.json();
+            } catch (error) { 
+                console.warn("Erro ao carregar planilha, gerando estrutura local.");
+                lensDatabase = {};
+            } finally {
+                document.getElementById('loading-screen').style.display = 'none';
+                
+                modelosExatos.forEach(modelo => {
+                    if (!lensDatabase[modelo]) {
+                        lensDatabase[modelo] = { tratamentos: { "Padrão": { "1.50": 0 } } };
+                    }
+                });
+
+                renderMenuLentes();
+            }
         }
 
         function renderMenuLentes() {
